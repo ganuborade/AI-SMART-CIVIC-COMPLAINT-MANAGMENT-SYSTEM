@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import LandingPage from './pages/LandingPage';
 import CitizenDashboard from './pages/CitizenDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import EmployeeDashboard from './pages/EmployeeDashboard';
@@ -9,7 +10,7 @@ import ComplaintDetailModal from './components/ComplaintDetailModal';
 import AuthModal from './components/AuthModal';
 
 function MainApp() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalTab, setAuthModalTab] = useState('login');
@@ -35,21 +36,48 @@ function MainApp() {
     setIsNewModalOpen(true);
   };
 
+  const handleOpenAuth = (tab = 'login') => {
+    setAuthModalTab(tab);
+    setIsAuthModalOpen(true);
+  };
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--bg-primary)',
+        color: 'var(--text-secondary)'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="brand-icon" style={{ width: '48px', height: '48px', margin: '0 auto 1rem' }}>
+            <span style={{ fontSize: '1.5rem' }}>⚡</span>
+          </div>
+          <p>Loading CivicAI Pulse Portal...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app-container">
       <Navbar
         onOpenNewComplaint={handleOpenNewComplaint}
-        onOpenAuth={(tab) => {
-          setAuthModalTab(tab || 'login');
-          setIsAuthModalOpen(true);
-        }}
+        onOpenAuth={handleOpenAuth}
         onSelectComplaint={(c) => setSelectedComplaint(c)}
       />
 
       <main className="main-content" key={refreshKey}>
-        {user?.role === 'ADMIN' ? (
+        {!user ? (
+          <LandingPage
+            onOpenAuth={handleOpenAuth}
+            onSelectComplaint={(c) => setSelectedComplaint(c)}
+          />
+        ) : user.role === 'ADMIN' ? (
           <AdminDashboard onSelectComplaint={(c) => setSelectedComplaint(c)} />
-        ) : user?.role === 'EMPLOYEE' ? (
+        ) : user.role === 'EMPLOYEE' ? (
           <EmployeeDashboard onSelectComplaint={(c) => setSelectedComplaint(c)} />
         ) : (
           <CitizenDashboard

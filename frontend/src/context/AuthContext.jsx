@@ -3,13 +3,6 @@ import { loginApi, registerApi, getMeApi } from '../api';
 
 const AuthContext = createContext();
 
-export const DEMO_PERSONAS = [
-  { label: 'Citizen (Ganesh Borade)', email: 'ganesh@citizen.org', password: 'citizen123', role: 'CITIZEN' },
-  { label: 'Administrator (Civic Admin)', email: 'admin@civic.gov', password: 'admin123', role: 'ADMIN' },
-  { label: 'Road Dept Officer (Ramesh)', email: 'road.officer@civic.gov', password: 'officer123', role: 'EMPLOYEE' },
-  { label: 'Water Dept Officer (Priya)', email: 'water.officer@civic.gov', password: 'officer123', role: 'EMPLOYEE' }
-];
-
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('civic_token'));
@@ -24,16 +17,16 @@ export const AuthProvider = ({ children }) => {
         try {
           setUser(JSON.parse(savedUser));
           setToken(savedToken);
-          // Verify with backend
+          // Strictly verify token validity with backend
           const res = await getMeApi();
           setUser(res.data);
           localStorage.setItem('civic_user', JSON.stringify(res.data));
         } catch (e) {
-          console.warn('Session expired or backend offline, keeping cached user for demo UI');
+          console.warn('Session expired or invalid credentials, clearing session.');
+          logout();
         }
       } else {
-        // Automatically default to Ganesh Borade for seamless first impression demo!
-        quickLogin('ganesh@citizen.org', 'citizen123');
+        logout();
       }
       setLoading(false);
     };
@@ -43,34 +36,20 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const res = await loginApi(email, password);
+      const res = await loginApi(email.trim(), password);
       const data = res.data;
       setToken(data.token);
       setUser(data);
       localStorage.setItem('civic_token', data.token);
       localStorage.setItem('civic_user', JSON.stringify(data));
-      return { success: true };
+      return { success: true, user: data };
     } catch (err) {
-      // Fallback for offline demo mode
-      const matched = DEMO_PERSONAS.find(p => p.email === email);
-      if (matched) {
-        const fallbackUser = {
-          id: email.includes('admin') ? 1 : (email.includes('road') ? 2 : 5),
-          name: matched.label.split('(')[1]?.replace(')', '') || 'Demo User',
-          email: matched.email,
-          role: matched.role,
-          departmentName: matched.role === 'EMPLOYEE' ? 'Road & Infrastructure Department' : null
-        };
-        setUser(fallbackUser);
-        localStorage.setItem('civic_user', JSON.stringify(fallbackUser));
-        return { success: true };
-      }
-      return { success: false, message: err.response?.data?.message || 'Login failed' };
+      const errorMsg =
+        err.response?.data?.message ||
+        (typeof err.response?.data === 'string' ? err.response.data : null) ||
+        'Invalid email or password. Please check your credentials.';
+      return { success: false, message: errorMsg };
     }
-  };
-
-  const quickLogin = async (email, password) => {
-    return login(email, password);
   };
 
   const register = async (userData) => {
@@ -81,9 +60,13 @@ export const AuthProvider = ({ children }) => {
       setUser(data);
       localStorage.setItem('civic_token', data.token);
       localStorage.setItem('civic_user', JSON.stringify(data));
-      return { success: true };
+      return { success: true, user: data };
     } catch (err) {
-      return { success: false, message: err.response?.data?.message || 'Registration failed' };
+      const errorMsg =
+        err.response?.data?.message ||
+        (typeof err.response?.data === 'string' ? err.response.data : null) ||
+        'Registration failed. Please verify your details.';
+      return { success: false, message: errorMsg };
     }
   };
 
@@ -95,7 +78,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, quickLogin, register, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

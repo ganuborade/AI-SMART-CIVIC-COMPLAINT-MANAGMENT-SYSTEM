@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useAuth, DEMO_PERSONAS } from '../context/AuthContext';
-import { X, Shield, User, Mail, Lock, Phone, LogIn, UserPlus, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { X, Shield, User, Mail, Lock, Phone, LogIn, UserPlus, AlertCircle, Info } from 'lucide-react';
 
 export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
-  const { login, register, quickLogin } = useAuth();
+  const { login, register } = useAuth();
   const [tab, setTab] = useState(initialTab);
 
   // Login form state
@@ -31,10 +31,10 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
       if (res.success) {
         onClose();
       } else {
-        setError(res.message || 'Invalid credentials');
+        setError(res.message || 'Invalid email or password. Please try again.');
       }
     } catch (err) {
-      setError(err.message || 'Login failed');
+      setError(err.message || 'Authentication failed. Please verify credentials.');
     } finally {
       setLoading(false);
     }
@@ -69,20 +69,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
         setError(res.message || 'Registration failed');
       }
     } catch (err) {
-      setError(err.message || 'Registration failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleQuickPersona = async (persona) => {
-    setError('');
-    setLoading(true);
-    try {
-      await quickLogin(persona.email, persona.password);
-      onClose();
-    } catch (err) {
-      setError('Failed to switch persona');
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -90,16 +77,16 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
 
   return (
     <div className="modal-backdrop">
-      <div className="modal-content" style={{ maxWidth: '480px' }}>
+      <div className="modal-content" style={{ maxWidth: '460px' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <div className="brand-icon" style={{ width: '36px', height: '36px' }}>
               <Shield size={20} />
             </div>
             <div>
-              <h2 style={{ fontSize: '1.25rem' }}>CivicAI Pulse</h2>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                Municipal Smart Complaint Portal
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 700 }}>CivicAI Pulse</h2>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                Municipal Smart Grievance Management
               </p>
             </div>
           </div>
@@ -131,7 +118,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
         {error && (
           <div style={{
             margin: '1rem 1.5rem 0',
-            padding: '0.6rem 0.8rem',
+            padding: '0.65rem 0.85rem',
             background: 'rgba(239, 68, 68, 0.15)',
             border: '1px solid rgba(239, 68, 68, 0.4)',
             borderRadius: 'var(--radius-sm)',
@@ -141,7 +128,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
             alignItems: 'center',
             gap: '8px'
           }}>
-            <AlertCircle size={16} />
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
             <span>{error}</span>
           </div>
         )}
@@ -155,7 +142,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
                   <input
                     type="email"
                     className="form-input"
-                    placeholder="e.g. ganesh@citizen.org"
+                    placeholder="e.g. admin@civic.gov or ganesh@citizen.org"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
                     required
@@ -171,7 +158,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
                   <input
                     type="password"
                     className="form-input"
-                    placeholder="Enter your account password"
+                    placeholder="Enter your secure password"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     required
@@ -185,46 +172,31 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
                 type="submit"
                 className="btn btn-primary"
                 disabled={loading}
-                style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem', justifyContent: 'center' }}
+                style={{ width: '100%', padding: '0.75rem', marginTop: '0.75rem', justifyContent: 'center' }}
               >
                 <LogIn size={16} />
-                {loading ? 'Authenticating...' : 'Sign In'}
+                {loading ? 'Verifying Credentials...' : 'Sign In'}
               </button>
 
-              {/* 1-Click Quick Demo Switcher */}
-              <div style={{ marginTop: '1.5rem', paddingTop: '1.2rem', borderTop: '1px solid var(--border)' }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', textAlign: 'center' }}>
-                  ⚡ Quick Demo Login (1-Click Test)
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                  {DEMO_PERSONAS.map(p => (
-                    <button
-                      key={p.email}
-                      type="button"
-                      className="btn btn-secondary btn-sm"
-                      onClick={() => handleQuickPersona(p)}
-                      disabled={loading}
-                      style={{
-                        fontSize: '0.75rem',
-                        padding: '0.45rem 0.6rem',
-                        textAlign: 'left',
-                        justifyContent: 'flex-start',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-start'
-                      }}
-                    >
-                      <strong style={{ color: p.role === 'ADMIN' ? '#f87171' : (p.role === 'EMPLOYEE' ? '#fbbf24' : '#34d399') }}>
-                        {p.role}
-                      </strong>
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.7rem' }}>
-                        {p.label.split('(')[1]?.replace(')', '') || p.label}
-                      </span>
-                    </button>
-                  ))}
+              <div style={{
+                marginTop: '1.25rem',
+                padding: '0.75rem',
+                background: 'rgba(99, 102, 241, 0.08)',
+                border: '1px solid rgba(99, 102, 241, 0.2)',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.75rem',
+                color: 'var(--text-secondary)',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '8px'
+              }}>
+                <Info size={16} color="var(--primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div>
+                  <strong>Role-Based Access Control:</strong> Citizens, Department Officers, and Municipal Administrators must authenticate using their registered credentials.
                 </div>
               </div>
             </div>
+
             <div className="modal-footer" style={{ borderTop: 'none', paddingTop: '0.5rem' }}>
               <button type="button" className="btn btn-secondary" onClick={onClose}>
                 Cancel
@@ -318,12 +290,13 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
                 type="submit"
                 className="btn btn-primary"
                 disabled={loading}
-                style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem', justifyContent: 'center' }}
+                style={{ width: '100%', padding: '0.75rem', marginTop: '0.75rem', justifyContent: 'center' }}
               >
                 <UserPlus size={16} />
                 {loading ? 'Creating Citizen Account...' : 'Register as Citizen'}
               </button>
             </div>
+
             <div className="modal-footer" style={{ borderTop: 'none', paddingTop: '0.5rem' }}>
               <button type="button" className="btn btn-secondary" onClick={onClose}>
                 Cancel
