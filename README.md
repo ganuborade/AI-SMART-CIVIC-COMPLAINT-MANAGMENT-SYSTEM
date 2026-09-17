@@ -305,5 +305,5 @@ Help our engineering team improve civic services:
 - **Lead Developer**: Ganesh Borade
 - **Official Contact Email**: [`ganuborade9898@gmail.com`](mailto:ganuborade9898@gmail.com)
 - **Mobile / WhatsApp Helpline**: `+91 9096040485` / `9096040485`
-- **Municipal Jurisdiction**: Pune Municipal Corporation (PMC), Maharashtra, India
+- **Municipal Jurisdiction**: Ameerpet Circle, Greater Hyderabad Municipal Corporation (GHMC), Telangana, India
 

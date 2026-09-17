@@ -10,6 +10,8 @@ import com.civic.complaints.repository.DepartmentRepository;
 import com.civic.complaints.repository.UserRepository;
 import com.civic.complaints.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,8 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.springframework.beans.factory.annotation.Value;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -30,11 +31,31 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
 
-    @Value("${app.admin.secret-key:ADMIN@2026}")
+    @Value("${app.admin.secret-key:ADMIN12@2026}")
     private String adminSecretKey;
 
-    @Value("${app.employee.secret-key:STAFF@2026}")
+    @Value("${app.employee.secret-key:STAFF13@2026}")
     private String employeeSecretKey;
+
+    private String getEffectiveAdminKey() {
+        String key = System.getProperty("ADMIN_REGISTRATION_KEY");
+        if (key != null && !key.trim().isEmpty()) return key.trim();
+        key = System.getProperty("app.admin.secret-key");
+        if (key != null && !key.trim().isEmpty()) return key.trim();
+        key = System.getenv("ADMIN_REGISTRATION_KEY");
+        if (key != null && !key.trim().isEmpty()) return key.trim();
+        return adminSecretKey != null ? adminSecretKey.trim() : "ADMIN12@2026";
+    }
+
+    private String getEffectiveEmployeeKey() {
+        String key = System.getProperty("EMPLOYEE_REGISTRATION_KEY");
+        if (key != null && !key.trim().isEmpty()) return key.trim();
+        key = System.getProperty("app.employee.secret-key");
+        if (key != null && !key.trim().isEmpty()) return key.trim();
+        key = System.getenv("EMPLOYEE_REGISTRATION_KEY");
+        if (key != null && !key.trim().isEmpty()) return key.trim();
+        return employeeSecretKey != null ? employeeSecretKey.trim() : "STAFF13@2026";
+    }
 
     public AuthResponse login(AuthRequest request) {
         Authentication authentication = authenticationManager.authenticate(
@@ -45,7 +66,7 @@ public class AuthService {
         String jwt = tokenProvider.generateToken(authentication);
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + request.getEmail()));
 
         return buildAuthResponse(user, jwt);
     }
@@ -58,13 +79,17 @@ public class AuthService {
 
         Role requestedRole = request.getRole() != null ? request.getRole() : Role.CITIZEN;
 
-        // Security Passkey Validation
+        // Security Passkey Validation for Staff and Admin
         if (requestedRole == Role.ADMIN) {
-            if (request.getSecretKey() == null || !request.getSecretKey().trim().equals(adminSecretKey.trim())) {
+            String expected = getEffectiveAdminKey();
+            if (request.getSecretKey() == null || !request.getSecretKey().trim().equals(expected)) {
+                log.warn("Admin registration failed: passkey mismatch for email {}", request.getEmail());
                 throw new IllegalArgumentException("Invalid Administrator Security Passkey. Admin authorization denied.");
             }
         } else if (requestedRole == Role.EMPLOYEE) {
-            if (request.getSecretKey() == null || !request.getSecretKey().trim().equals(employeeSecretKey.trim())) {
+            String expected = getEffectiveEmployeeKey();
+            if (request.getSecretKey() == null || !request.getSecretKey().trim().equals(expected)) {
+                log.warn("Employee registration failed: passkey mismatch for email {}", request.getEmail());
                 throw new IllegalArgumentException("Invalid Municipal Staff Security Passkey. Employee authorization denied.");
             }
             if (request.getDepartmentId() == null) {
@@ -83,7 +108,7 @@ public class AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .phone(request.getPhone())
-                .role(request.getRole() != null ? request.getRole() : Role.CITIZEN)
+                .role(requestedRole)
                 .department(department)
                 .build();
 
@@ -94,6 +119,7 @@ public class AuthService {
         );
         String jwt = tokenProvider.generateToken(authentication);
 
+        log.info("Successfully registered new user #{} ({}) with role {}", user.getId(), user.getEmail(), user.getRole());
         return buildAuthResponse(user, jwt);
     }
 

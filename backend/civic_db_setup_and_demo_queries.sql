@@ -214,11 +214,11 @@ INSERT INTO users (id, name, email, password, phone, role, department_id, create
 
 -- 5.3 Insert Complaints across Lifecycle States
 INSERT INTO complaints (id, citizen_id, title, description, category, priority, latitude, longitude, address, status, ai_confidence, created_at, updated_at) VALUES
-(1, 6, 'Large pothole near school entrance causing accidents', 'There is a large pothole near the primary school gate. School buses and two-wheelers are losing balance and vehicles are having severe difficulty passing.', 'ROAD_DAMAGE', 'HIGH', 18.5204, 73.8567, 'FC Road, near Modern High School, Shivajinagar, Pune', 'IN_PROGRESS', 0.94, DATE_SUB(NOW(), INTERVAL 24 HOUR), DATE_SUB(NOW(), INTERVAL 2 HOUR)),
-(2, 7, 'Major water pipeline has burst and water is flooding houses', 'High pressure drinking water line ruptured under pavement. Huge volume of water is gushing onto the street and flooding nearby ground floor houses and shops.', 'WATER_LEAKAGE', 'CRITICAL', 18.5314, 73.8446, 'Senapati Bapat Road, near ICC Tech Park, Pune', 'ASSIGNED', 0.98, DATE_SUB(NOW(), INTERVAL 6 HOUR), DATE_SUB(NOW(), INTERVAL 1 HOUR)),
-(3, 6, 'Street light has not been working for the last 5 days', 'Four consecutive street light poles are dark near the community garden. Pedestrians and women feel unsafe walking after 8 PM.', 'STREET_LIGHT', 'MEDIUM', 18.5089, 73.8260, 'Paud Road, near Joggers Park, Kothrud, Pune', 'RESOLVED', 0.92, DATE_SUB(NOW(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)),
-(4, 7, 'Garbage container overflowing with street waste near vegetable market', 'The green community waste bins have not been emptied for 3 days. Animals are scattering the waste across the road causing severe stench.', 'GARBAGE_WASTE', 'HIGH', 18.5074, 73.8077, 'Karve Nagar Market, Pune', 'UNDER_REVIEW', 0.89, DATE_SUB(NOW(), INTERVAL 8 HOUR), DATE_SUB(NOW(), INTERVAL 8 HOUR)),
-(5, 6, 'Open storm drain manhole lid missing near bus stop', 'Cement cover of roadside stormwater drain broken and collapsed. It poses an immediate fall risk for commuters boarding the PMT bus.', 'DRAINAGE_OVERFLOW', 'HIGH', 18.5362, 73.8300, 'Aundh Road, near Bremen Chowk, Pune', 'UNDER_REVIEW', 0.95, DATE_SUB(NOW(), INTERVAL 12 HOUR), DATE_SUB(NOW(), INTERVAL 12 HOUR));
+(1, 6, 'Large pothole near school entrance causing accidents', 'There is a large pothole near the primary school gate. School buses and two-wheelers are losing balance and vehicles are having severe difficulty passing.', 'ROAD_DAMAGE', 'HIGH', 17.4375, 78.4482, 'Ameerpet Metro Station, NH 65, Ameerpet, Hyderabad', 'IN_PROGRESS', 0.94, DATE_SUB(NOW(), INTERVAL 24 HOUR), DATE_SUB(NOW(), INTERVAL 2 HOUR)),
+(2, 7, 'Major water pipeline has burst and water is flooding houses', 'High pressure drinking water line ruptured under pavement. Huge volume of water is gushing onto the street and flooding nearby ground floor houses and shops.', 'WATER_LEAKAGE', 'CRITICAL', 17.4435, 78.4470, 'Mythrivanam Building Road, SR Nagar, Ameerpet, Hyderabad', 'ASSIGNED', 0.98, DATE_SUB(NOW(), INTERVAL 6 HOUR), DATE_SUB(NOW(), INTERVAL 1 HOUR)),
+(3, 6, 'Street light has not been working for the last 5 days', 'Four consecutive street light poles are dark near the community garden. Pedestrians and women feel unsafe walking after 8 PM.', 'STREET_LIGHT', 'MEDIUM', 17.4420, 78.4550, 'Begumpet Main Road, near Lifestyle, Hyderabad', 'RESOLVED', 0.92, DATE_SUB(NOW(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)),
+(4, 7, 'Garbage container overflowing with street waste near vegetable market', 'The green community waste bins have not been emptied for 3 days. Animals are scattering the waste across the road causing severe stench.', 'GARBAGE_WASTE', 'HIGH', 17.4320, 78.4480, 'Panjagutta Circle, near Central Mall, Hyderabad', 'UNDER_REVIEW', 0.89, DATE_SUB(NOW(), INTERVAL 8 HOUR), DATE_SUB(NOW(), INTERVAL 8 HOUR)),
+(5, 6, 'Open storm drain manhole lid missing near bus stop', 'Cement cover of roadside stormwater drain broken and collapsed. It poses an immediate fall risk for commuters boarding the PMT bus.', 'DRAINAGE_OVERFLOW', 'HIGH', 17.4480, 78.4410, 'SR Nagar Community Ground, Ameerpet, Hyderabad', 'UNDER_REVIEW', 0.95, DATE_SUB(NOW(), INTERVAL 12 HOUR), DATE_SUB(NOW(), INTERVAL 12 HOUR));
 
 -- 5.4 Insert AI Analysis Results
 INSERT INTO ai_analysis (id, complaint_id, category, priority, suggested_department, summary, confidence, ai_response, duplicate_of_id, image_tags, created_at) VALUES
@@ -470,4 +470,67 @@ SELECT
     (SELECT COUNT(*) FROM users WHERE role = 'EMPLOYEE') AS municipal_field_officers,
     (SELECT COUNT(*) FROM users WHERE role = 'ADMIN') AS system_administrators,
     (SELECT COUNT(*) FROM departments) AS municipal_departments;
+
+-- ============================================================================
+-- 6. SAFE DELETION & LIFECYCLE MANAGEMENT QUERIES
+-- ============================================================================
+
+-- DEMO QUERY 13: Safe Citizen Profile Deletion (Cascades Complaints & Notifications)
+-- Replace :user_id with the ID of the citizen being deleted (e.g. 12)
+-- Step A: Delete all notifications associated with complaints filed by this citizen
+DELETE n FROM notifications n
+JOIN complaints c ON n.complaint_id = c.id
+WHERE c.citizen_id = 12;
+
+-- Step B: Delete all direct personal notifications for this citizen
+DELETE FROM notifications WHERE user_id = 12;
+
+-- Step C: Delete all complaints filed by this citizen (foreign keys will cascade images, ai_analysis, etc.)
+DELETE FROM complaints WHERE citizen_id = 12;
+
+-- Step D: Finally, permanently delete the citizen user account
+DELETE FROM users WHERE id = 12 AND role = 'CITIZEN';
+
+
+-- DEMO QUERY 14: Safe Field Officer / Employee Profile Deletion (Safe Unassign)
+-- Replace :user_id with the ID of the officer being deleted (e.g. 10)
+-- Step A: Unassign this officer from any active work orders so complaints remain intact
+UPDATE assignments SET employee_id = NULL WHERE employee_id = 10;
+
+-- Step B: Nullify changed_by in status history audits to preserve civic history
+UPDATE complaint_status_history SET changed_by = NULL WHERE changed_by = 10;
+
+-- Step C: Delete direct notifications for this officer
+DELETE FROM notifications WHERE user_id = 10;
+
+-- Step D: Finally, permanently delete the officer account
+DELETE FROM users WHERE id = 10 AND role = 'EMPLOYEE';
+
+
+-- DEMO QUERY 15: Safe Administrator Profile Deletion
+-- Replace :user_id with the ID of the administrator being deleted (e.g. 11)
+-- Step A: Nullify changed_by in status history audits
+UPDATE complaint_status_history SET changed_by = NULL WHERE changed_by = 11;
+
+-- Step B: Delete direct notifications for this administrator
+DELETE FROM notifications WHERE user_id = 11;
+
+-- Step C: Finally, permanently delete the administrator account
+DELETE FROM users WHERE id = 11 AND role = 'ADMIN';
+
+
+-- DEMO QUERY 16: Safe Complaint Deletion (ADMIN-ONLY Action)
+-- Replace :complaint_id with the ID of the complaint to delete (e.g. 8)
+-- Step A: Delete in-app notifications tied to this complaint
+DELETE FROM notifications WHERE complaint_id = 8;
+
+-- Step B: Delete child records (if ON DELETE CASCADE is not configured)
+DELETE FROM feedback WHERE complaint_id = 8;
+DELETE FROM complaint_status_history WHERE complaint_id = 8;
+DELETE FROM complaint_images WHERE complaint_id = 8;
+DELETE FROM assignments WHERE complaint_id = 8;
+DELETE FROM ai_analysis WHERE complaint_id = 8;
+
+-- Step C: Delete the complaint record
+DELETE FROM complaints WHERE id = 8;
 

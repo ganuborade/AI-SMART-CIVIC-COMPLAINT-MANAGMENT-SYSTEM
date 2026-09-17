@@ -204,7 +204,7 @@ export default function Footer({ onOpenManual, onOpenFaq }) {
                 </div>
                 <div>
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Jurisdiction Headquarters</div>
-                  <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Pune Municipal Corporation (PMC), MH</div>
+                  <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Ameerpet Circle, Greater Hyderabad Municipal Corporation (GHMC), Telangana</div>
                 </div>
               </div>
             </div>

@@ -15,6 +15,7 @@ import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 import CityMap from '../components/CityMap';
 import AssignModal from '../components/AssignModal';
+import ProfileModal from '../components/ProfileModal';
 import {
   ShieldAlert,
   AlertTriangle,
@@ -38,7 +39,8 @@ import {
   Map,
   Key,
   BookOpen,
-  Trash2
+  Trash2,
+  User
 } from 'lucide-react';
 
 export default function AdminDashboard({ onSelectComplaint }) {
@@ -50,6 +52,7 @@ export default function AdminDashboard({ onSelectComplaint }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('triage'); // 'triage' | 'departments' | 'users' | 'map' | 'manual'
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const [selectedForAssign, setSelectedForAssign] = useState(null);
   const [filterCategory, setFilterCategory] = useState('ALL');
@@ -276,12 +279,11 @@ export default function AdminDashboard({ onSelectComplaint }) {
           </button>
           <button
             className="btn btn-secondary"
-            onClick={handleDeleteAccount}
-            title={t('deleteAccount')}
-            style={{ color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.35)', padding: '0.65rem 0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+            onClick={() => setIsProfileOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            <Trash2 size={16} />
-            <span style={{ fontSize: '0.85rem' }}>{t('deleteAccount')}</span>
+            <User size={16} />
+            My Profile
           </button>
         </div>
       </div>
@@ -635,7 +637,7 @@ export default function AdminDashboard({ onSelectComplaint }) {
             <div>
               <h2 style={{ fontSize: '1.2rem', fontWeight: 700 }}>Civic Departments &amp; Workforce Overview</h2>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                Track departmental workloads, field engineer allocations, and SLA completion rates across Pune municipality.
+                Track departmental workloads, field engineer allocations, and SLA completion rates across Ameerpet &amp; Hyderabad (GHMC) municipality.
               </p>
             </div>
             <button
@@ -1087,6 +1089,8 @@ export default function AdminDashboard({ onSelectComplaint }) {
           </div>
         </div>
       )}
+
+      <ProfileModal isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
     </div>
   );
 }

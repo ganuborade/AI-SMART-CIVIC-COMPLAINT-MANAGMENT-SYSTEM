@@ -3,7 +3,8 @@ import { getMyComplaintsApi, deleteProfileApi } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 import CityMap from '../components/CityMap';
-import { PlusCircle, Clock, CheckCircle2, AlertTriangle, MapPin, Sparkles, Search, Filter, Table, Map, Image, Eye, Star, BookOpen, Trash2, CheckCircle } from 'lucide-react';
+import ProfileModal from '../components/ProfileModal';
+import { PlusCircle, Clock, CheckCircle2, AlertTriangle, MapPin, Sparkles, Search, Filter, Table, Map, Image, Eye, Star, BookOpen, Trash2, CheckCircle, User } from 'lucide-react';
 
 export default function CitizenDashboard({ onOpenNewComplaint, onSelectComplaint }) {
   const { user, logout } = useAuth();
@@ -14,6 +15,7 @@ export default function CitizenDashboard({ onOpenNewComplaint, onSelectComplaint
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'map' | 'proof'
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   useEffect(() => {
     fetchComplaints();
@@ -99,12 +101,11 @@ export default function CitizenDashboard({ onOpenNewComplaint, onSelectComplaint
           </button>
           <button
             className="btn btn-secondary"
-            onClick={handleDeleteAccount}
-            title={t('deleteAccount')}
-            style={{ color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.35)', padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+            onClick={() => setIsProfileOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            <Trash2 size={16} />
-            <span style={{ fontSize: '0.85rem' }}>{t('deleteAccount')}</span>
+            <User size={16} />
+            My Profile
           </button>
         </div>
       </div>
@@ -477,6 +478,8 @@ export default function CitizenDashboard({ onOpenNewComplaint, onSelectComplaint
           </div>
         )}
       </div>
+
+      <ProfileModal isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
     </div>
   );
 }

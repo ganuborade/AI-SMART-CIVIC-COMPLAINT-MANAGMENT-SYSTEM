@@ -8,8 +8,8 @@ export default function NewComplaintModal({ isOpen, onClose, onCreated }) {
   const { t } = useUI();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [address, setAddress] = useState('FC Road, Shivajinagar, Pune');
-  const [location, setLocation] = useState({ lat: 18.5204, lng: 73.8567 });
+  const [address, setAddress] = useState('Ameerpet Metro Station, Ameerpet, Hyderabad, Telangana 500016');
+  const [location, setLocation] = useState({ lat: 17.4375, lng: 78.4482 });
   const [capturedTime, setCapturedTime] = useState(new Date().toLocaleTimeString());
   const [isDetectingGps, setIsDetectingGps] = useState(false);
   const [reverseGeocodingLoading, setReverseGeocodingLoading] = useState(false);
@@ -376,7 +376,7 @@ export default function NewComplaintModal({ isOpen, onClose, onCreated }) {
                       className="form-input"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      placeholder="e.g. Near Modern High School, FC Road, Pune"
+                      placeholder="e.g. Near Ameerpet Metro Station, Mythrivanam, Ameerpet, Hyderabad"
                       required
                     />
                   </div>

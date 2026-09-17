@@ -61,7 +61,7 @@ export default function CityMap({
   height = '420px',
   zoom = 13
 }) {
-  const defaultCenter = [18.5204, 73.8567]; // Pune center
+  const defaultCenter = [17.4375, 78.4482]; // Ameerpet, Hyderabad center
   const center = pickerLocation 
     ? [pickerLocation.lat, pickerLocation.lng]
     : (selectedComplaint ? [selectedComplaint.latitude, selectedComplaint.longitude] : defaultCenter);

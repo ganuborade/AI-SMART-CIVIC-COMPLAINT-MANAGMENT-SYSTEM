@@ -154,9 +154,9 @@ public class DataInitializer implements CommandLineRunner {
         ComplaintRequest req1 = new ComplaintRequest();
         req1.setTitle("Large pothole near school entrance causing accidents");
         req1.setDescription("There is a large pothole near the primary school gate. School buses and two-wheelers are losing balance and vehicles are having severe difficulty passing.");
-        req1.setLatitude(18.5204);
-        req1.setLongitude(73.8567);
-        req1.setAddress("FC Road, near Modern High School, Shivajinagar, Pune");
+        req1.setLatitude(17.4375);
+        req1.setLongitude(78.4482);
+        req1.setAddress("Ameerpet Metro Station, NH 65, Ameerpet, Hyderabad");
         complaintService.createComplaint(req1, ganesh, null);
 
         Complaint c1 = complaintRepository.findAll().get(0);
@@ -181,9 +181,9 @@ public class DataInitializer implements CommandLineRunner {
         ComplaintRequest req2 = new ComplaintRequest();
         req2.setTitle("Major water pipeline has burst and water is flooding houses");
         req2.setDescription("High pressure drinking water line ruptured under pavement. Huge volume of water is gushing onto the street and flooding nearby ground floor houses and shops.");
-        req2.setLatitude(18.5314);
-        req2.setLongitude(73.8446);
-        req2.setAddress("Senapati Bapat Road, near ICC Tech Park, Pune");
+        req2.setLatitude(17.4435);
+        req2.setLongitude(78.4470);
+        req2.setAddress("Mythrivanam Building Road, SR Nagar, Ameerpet, Hyderabad");
         complaintService.createComplaint(req2, aarav, null);
 
         Complaint c2 = complaintRepository.findAll().get(1);
@@ -206,9 +206,9 @@ public class DataInitializer implements CommandLineRunner {
         ComplaintRequest req3 = new ComplaintRequest();
         req3.setTitle("Street light has not been working for the last 5 days");
         req3.setDescription("Four consecutive street light poles are dark near the community garden. Pedestrians and women feel unsafe walking after 8 PM.");
-        req3.setLatitude(18.5089);
-        req3.setLongitude(73.8260);
-        req3.setAddress("Paud Road, near Joggers Park, Kothrud, Pune");
+        req3.setLatitude(17.4420);
+        req3.setLongitude(78.4550);
+        req3.setAddress("Begumpet Main Road, near Lifestyle, Hyderabad");
         complaintService.createComplaint(req3, ganesh, null);
 
         Complaint c3 = complaintRepository.findAll().get(2);
@@ -240,9 +240,9 @@ public class DataInitializer implements CommandLineRunner {
         ComplaintRequest req4 = new ComplaintRequest();
         req4.setTitle("Garbage container overflowing with street waste near vegetable market");
         req4.setDescription("The green community waste bins have not been emptied for 3 days. Animals are scattering the waste across the road causing severe stench.");
-        req4.setLatitude(18.5074);
-        req4.setLongitude(73.8077);
-        req4.setAddress("Karve Nagar Market, Pune");
+        req4.setLatitude(17.4320);
+        req4.setLongitude(78.4480);
+        req4.setAddress("Panjagutta Circle, near Central Mall, Hyderabad");
         complaintService.createComplaint(req4, aarav, null);
 
         Complaint c4 = complaintRepository.findAll().get(3);
@@ -252,9 +252,9 @@ public class DataInitializer implements CommandLineRunner {
         ComplaintRequest req5 = new ComplaintRequest();
         req5.setTitle("Open storm drain manhole lid missing near bus stop");
         req5.setDescription("Cement cover of roadside stormwater drain broken and collapsed. It poses an immediate fall risk for commuters boarding the PMT bus.");
-        req5.setLatitude(18.5362);
-        req5.setLongitude(73.8300);
-        req5.setAddress("Aundh Road, near Bremen Chowk, Pune");
+        req5.setLatitude(17.4480);
+        req5.setLongitude(78.4410);
+        req5.setAddress("SR Nagar Community Ground, Ameerpet, Hyderabad");
         complaintService.createComplaint(req5, ganesh, null);
 
         Complaint c5 = complaintRepository.findAll().get(4);

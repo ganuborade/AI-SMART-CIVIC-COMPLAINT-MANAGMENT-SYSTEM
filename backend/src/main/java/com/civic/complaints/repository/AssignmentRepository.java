@@ -12,4 +12,8 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
     Optional<Assignment> findByComplaintId(Long complaintId);
     List<Assignment> findByDepartmentId(Long departmentId);
     List<Assignment> findByEmployeeId(Long employeeId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("UPDATE Assignment a SET a.employee = null WHERE a.employee.id = :employeeId")
+    void unassignEmployee(@org.springframework.data.repository.query.Param("employeeId") Long employeeId);
 }

@@ -15,9 +15,9 @@ import java.util.List;
 public class CivicComplaintSystemApplication {
 
     public static void main(String[] args) {
-        // Load .env variables into System properties
-        loadDotEnv(Paths.get(".env"));
+        // Load .env variables into System properties (check root and current dir)
         loadDotEnv(Paths.get("../.env"));
+        loadDotEnv(Paths.get(".env"));
 
         SpringApplication.run(CivicComplaintSystemApplication.class, args);
     }
@@ -38,8 +38,20 @@ public class CivicComplaintSystemApplication {
                         (val.startsWith("'") && val.endsWith("'"))) {
                         val = val.substring(1, val.length() - 1);
                     }
-                    if (System.getProperty(key) == null && System.getenv(key) == null) {
-                        System.setProperty(key, val);
+                    // Always set into System properties so Spring Boot picks it up
+                    System.setProperty(key, val);
+
+                    // Also set common Spring aliases
+                    if ("ADMIN_REGISTRATION_KEY".equalsIgnoreCase(key)) {
+                        System.setProperty("app.admin.secret-key", val);
+                    } else if ("EMPLOYEE_REGISTRATION_KEY".equalsIgnoreCase(key)) {
+                        System.setProperty("app.employee.secret-key", val);
+                    } else if ("DB_PASSWORD".equalsIgnoreCase(key)) {
+                        System.setProperty("spring.datasource.password", val);
+                    } else if ("DB_USERNAME".equalsIgnoreCase(key)) {
+                        System.setProperty("spring.datasource.username", val);
+                    } else if ("DB_URL".equalsIgnoreCase(key)) {
+                        System.setProperty("spring.datasource.url", val);
                     }
                 }
             }

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { getEmployeeComplaintsApi, startWorkApi, resolveComplaintMultipartApi, deleteProfileApi } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
-import { HardHat, Play, CheckCircle2, UploadCloud, MapPin, Sparkles, X, Eye, Search, Filter, Clock, AlertTriangle, FileText, CheckCheck, BarChart3, Image, BookOpen, Trash2, CheckCircle } from 'lucide-react';
+import ProfileModal from '../components/ProfileModal';
+import { HardHat, Play, CheckCircle2, UploadCloud, MapPin, Sparkles, X, Eye, Search, Filter, Clock, AlertTriangle, FileText, CheckCheck, BarChart3, Image, BookOpen, Trash2, CheckCircle, User } from 'lucide-react';
 
 export default function EmployeeDashboard({ onSelectComplaint }) {
   const { user, logout } = useAuth();
@@ -13,6 +14,7 @@ export default function EmployeeDashboard({ onSelectComplaint }) {
   const [priorityFilter, setPriorityFilter] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('assigned'); // 'assigned' | 'completed' | 'stats' | 'manual'
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const [resolveTask, setResolveTask] = useState(null);
   const [resolveNotes, setResolveNotes] = useState('');
@@ -134,12 +136,11 @@ export default function EmployeeDashboard({ onSelectComplaint }) {
           </button>
           <button
             className="btn btn-secondary"
-            onClick={handleDeleteAccount}
-            title={t('deleteAccount')}
-            style={{ color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.35)', padding: '0.65rem 0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+            onClick={() => setIsProfileOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            <Trash2 size={16} />
-            <span style={{ fontSize: '0.85rem' }}>{t('deleteAccount')}</span>
+            <User size={16} />
+            My Profile
           </button>
         </div>
       </div>
@@ -541,6 +542,8 @@ export default function EmployeeDashboard({ onSelectComplaint }) {
           </div>
         </div>
       )}
+
+      <ProfileModal isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
     </div>
   );
 }
