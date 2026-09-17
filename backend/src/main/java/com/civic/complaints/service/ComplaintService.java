@@ -39,31 +39,46 @@ public class ComplaintService {
             imageUrl = fileStorageService.storeFile(image);
         }
 
-        // 1. Run AI Analysis
-        AIAnalysisResult aiResult = aiService.analyzeComplaint(
-                request.getTitle(),
-                request.getDescription(),
-                request.getLatitude(),
-                request.getLongitude(),
-                imageUrl
-        );
+        // 1. Run AI Analysis with resilient fallback
+        AIAnalysisResult aiResult;
+        try {
+            aiResult = aiService.analyzeComplaint(
+                    request.getTitle(),
+                    request.getDescription(),
+                    request.getLatitude(),
+                    request.getLongitude(),
+                    imageUrl
+            );
+        } catch (Throwable t) {
+            log.error("AI Analysis failed during complaint creation; applying intelligent defaults: {}", t.getMessage());
+            aiResult = AIAnalysisResult.builder()
+                    .category(Category.OTHER)
+                    .priority(Priority.MEDIUM)
+                    .suggestedDepartment("General Municipal Administration")
+                    .summary(request.getTitle() != null ? request.getTitle() : "Civic Complaint")
+                    .confidence(0.75)
+                    .rawResponse("{\"engine\": \"Fallback\", \"error\": \"" + t.getMessage() + "\"}")
+                    .build();
+        }
 
         // 2. Set Category & Priority (use AI detection if not explicitly specified by user)
-        Category category = request.getCategory() != null ? request.getCategory() : aiResult.getCategory();
-        Priority priority = request.getPriority() != null ? request.getPriority() : aiResult.getPriority();
+        Category category = request.getCategory() != null ? request.getCategory() 
+                : (aiResult != null && aiResult.getCategory() != null ? aiResult.getCategory() : Category.OTHER);
+        Priority priority = request.getPriority() != null ? request.getPriority() 
+                : (aiResult != null && aiResult.getPriority() != null ? aiResult.getPriority() : Priority.MEDIUM);
 
         // 3. Create and save Complaint entity
         Complaint complaint = Complaint.builder()
                 .citizen(citizen)
-                .title(request.getTitle())
-                .description(request.getDescription())
+                .title(request.getTitle() != null ? request.getTitle().trim() : "Civic Defect")
+                .description(request.getDescription() != null ? request.getDescription().trim() : "")
                 .category(category)
                 .priority(priority)
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
                 .address(request.getAddress())
                 .status(ComplaintStatus.SUBMITTED)
-                .aiConfidence(aiResult.getConfidence())
+                .aiConfidence(aiResult != null ? aiResult.getConfidence() : 0.75)
                 .build();
 
         complaint = complaintRepository.save(complaint);

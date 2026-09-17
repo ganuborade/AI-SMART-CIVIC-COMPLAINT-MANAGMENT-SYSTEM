@@ -43,7 +43,9 @@ public class LocalIntelligentAIService implements AIService {
 
     @Override
     public AIAnalysisResult analyzeComplaint(String title, String description, Double latitude, Double longitude, String imageUrl) {
-        String combined = (title + " " + description).toLowerCase();
+        String safeTitle = title != null ? title.trim() : "";
+        String safeDesc = description != null ? description.trim() : "";
+        String combined = (safeTitle + " " + safeDesc).toLowerCase();
 
         // 1. Determine Category & Confidence
         Category detectedCategory = detectCategory(combined);
@@ -56,16 +58,20 @@ public class LocalIntelligentAIService implements AIService {
         String departmentName = mapCategoryToDepartment(detectedCategory);
 
         // 4. Generate AI Summary
-        String summary = generateSummary(title, detectedCategory, detectedPriority);
+        String summary = generateSummary(safeTitle, detectedCategory, detectedPriority);
 
         // 5. Detect Potential Duplicates
         Long duplicateOfId = null;
         String duplicateTitle = null;
         if (latitude != null && longitude != null) {
-            DuplicateMatch match = findNearbyDuplicate(latitude, longitude, detectedCategory, combined);
-            if (match != null) {
-                duplicateOfId = match.complaintId;
-                duplicateTitle = match.title;
+            try {
+                DuplicateMatch match = findNearbyDuplicate(latitude, longitude, detectedCategory, combined);
+                if (match != null) {
+                    duplicateOfId = match.complaintId;
+                    duplicateTitle = match.title;
+                }
+            } catch (Exception e) {
+                log.warn("Duplicate check failed safely: {}", e.getMessage());
             }
         }
 
@@ -173,7 +179,7 @@ public class LocalIntelligentAIService implements AIService {
     }
 
     private String generateSummary(String title, Category category, Priority priority) {
-        String cleanTitle = title.trim();
+        String cleanTitle = (title != null && !title.trim().isEmpty()) ? title.trim() : "Civic Defect";
         if (cleanTitle.length() > 60) {
             cleanTitle = cleanTitle.substring(0, 57) + "...";
         }

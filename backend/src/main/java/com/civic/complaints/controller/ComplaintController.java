@@ -36,7 +36,7 @@ public class ComplaintController {
             @RequestParam("latitude") Double latitude,
             @RequestParam("longitude") Double longitude,
             @RequestParam(value = "address", required = false) String address,
-            @RequestPart(value = "image", required = false) MultipartFile image,
+            @RequestParam(value = "image", required = false) MultipartFile image,
             @AuthenticationPrincipal UserPrincipal principal) {
 
         User user = getUser(principal);

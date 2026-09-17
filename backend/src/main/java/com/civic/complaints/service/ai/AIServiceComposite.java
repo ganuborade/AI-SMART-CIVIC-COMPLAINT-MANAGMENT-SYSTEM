@@ -26,12 +26,16 @@ public class AIServiceComposite implements AIService {
             try {
                 log.info("Analyzing complaint using Cloud Gemini AI API...");
                 AIAnalysisResult result = geminiAIService.analyzeComplaint(title, description, latitude, longitude, imageUrl);
-                // Also run local duplicate check
-                AIAnalysisResult localCheck = localAIService.analyzeComplaint(title, description, latitude, longitude, imageUrl);
-                result.setDuplicateOfId(localCheck.getDuplicateOfId());
-                result.setDuplicateTitle(localCheck.getDuplicateTitle());
+                try {
+                    // Also run local duplicate check
+                    AIAnalysisResult localCheck = localAIService.analyzeComplaint(title, description, latitude, longitude, imageUrl);
+                    result.setDuplicateOfId(localCheck.getDuplicateOfId());
+                    result.setDuplicateTitle(localCheck.getDuplicateTitle());
+                } catch (Throwable t) {
+                    log.warn("Local duplicate check warning: {}", t.getMessage());
+                }
                 return result;
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 log.warn("Gemini API call failed ({}), falling back to Local Intelligent AI Engine", e.getMessage());
             }
         }
@@ -45,7 +49,7 @@ public class AIServiceComposite implements AIService {
             try {
                 log.info("Analyzing image using Cloud Gemini Vision API...");
                 return geminiAIService.analyzeImage(imageBytes, originalFilename);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 log.warn("Gemini Vision API call failed ({}), falling back to Local Vision Heuristics", e.getMessage());
             }
         }
