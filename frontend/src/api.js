@@ -76,4 +76,13 @@ export const getNotificationsApi = () => api.get('/notifications');
 export const getUnreadCountApi = () => api.get('/notifications/unread-count');
 export const markNotificationReadApi = (id) => api.put(`/notifications/${id}/read`);
 
+// User Profile & Account Deletion
+export const getProfileApi = () => api.get('/users/profile');
+export const deleteProfileApi = () => api.delete('/users/profile');
+
+// Admin Exclusive Deletion
+export const deleteComplaintApi = (id) => api.delete(`/admin/complaints/${id}`);
+export const deleteUserApi = (id) => api.delete(`/admin/users/${id}`);
+
 export default api;
+

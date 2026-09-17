@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { getMyComplaintsApi } from '../api';
+import { getMyComplaintsApi, deleteProfileApi } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 import CityMap from '../components/CityMap';
-import { PlusCircle, Clock, CheckCircle2, AlertTriangle, MapPin, Sparkles, Search, Filter, Table, Map, Image, Eye, Star } from 'lucide-react';
+import { PlusCircle, Clock, CheckCircle2, AlertTriangle, MapPin, Sparkles, Search, Filter, Table, Map, Image, Eye, Star, BookOpen, Trash2, CheckCircle } from 'lucide-react';
 
 export default function CitizenDashboard({ onOpenNewComplaint, onSelectComplaint }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { t } = useUI();
   const [complaints, setComplaints] = useState([]);
   const [filter, setFilter] = useState('ALL');
@@ -55,10 +55,22 @@ export default function CitizenDashboard({ onOpenNewComplaint, onSelectComplaint
 
   const resolvedWithProof = complaints.filter(c => c.status === 'RESOLVED' || c.status === 'CLOSED');
 
+  const handleDeleteAccount = async () => {
+    if (window.confirm(t('deleteAccountConfirm') || 'Are you sure you want to permanently delete your citizen account? All your filed complaints and profile data will be permanently deleted. This cannot be undone.')) {
+      try {
+        await deleteProfileApi();
+        alert('Your citizen account has been permanently deleted.');
+        logout();
+      } catch (err) {
+        alert('Failed to delete account: ' + (err.response?.data?.message || err.message));
+      }
+    }
+  };
+
   return (
     <div>
       {/* Header Banner */}
-      <div className="page-header">
+      <div className="page-header" style={{ flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <div className="page-title">
             <h1>{t('welcomeBack')}, {user?.name || t('citizen')}</h1>
@@ -67,14 +79,34 @@ export default function CitizenDashboard({ onOpenNewComplaint, onSelectComplaint
             Report municipal civic problems with real-time GPS coordinates and photo evidence. AI instantly triages and routes to ward engineers.
           </p>
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={onOpenNewComplaint}
-          style={{ padding: '0.75rem 1.4rem', fontSize: '1rem' }}
-        >
-          <PlusCircle size={20} />
-          {t('reportProblem')}
-        </button>
+
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <button
+            className="btn btn-secondary"
+            onClick={() => setViewMode('manual')}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <BookOpen size={16} />
+            {t('citizenManual')}
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={onOpenNewComplaint}
+            style={{ padding: '0.75rem 1.4rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <PlusCircle size={18} />
+            {t('reportProblem')}
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={handleDeleteAccount}
+            title={t('deleteAccount')}
+            style={{ color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.35)', padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Trash2 size={16} />
+            <span style={{ fontSize: '0.85rem' }}>{t('deleteAccount')}</span>
+          </button>
+        </div>
       </div>
 
       {/* KPI Metrics */}
@@ -163,6 +195,15 @@ export default function CitizenDashboard({ onOpenNewComplaint, onSelectComplaint
                 title="Resolution Evidence & Feedback"
               >
                 <Image size={13} /> Proofs ({resolvedWithProof.length})
+              </button>
+              <button
+                type="button"
+                className={`tab-btn ${viewMode === 'manual' ? 'active' : ''}`}
+                onClick={() => setViewMode('manual')}
+                style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                title="Citizen Operating Manual"
+              >
+                <BookOpen size={13} /> Guide
               </button>
             </div>
           </div>
@@ -320,7 +361,7 @@ export default function CitizenDashboard({ onOpenNewComplaint, onSelectComplaint
               zoom={13}
             />
           </div>
-        ) : (
+        ) : viewMode === 'proof' ? (
           /* TAB 3: Resolved Work & Proof Gallery */
           <div style={{ padding: '1rem' }}>
             {resolvedWithProof.length === 0 ? (
@@ -375,6 +416,64 @@ export default function CitizenDashboard({ onOpenNewComplaint, onSelectComplaint
                 ))}
               </div>
             )}
+          </div>
+        ) : (
+          /* TAB 4: Dedicated Citizen User Manual */
+          <div style={{ padding: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.25rem', color: '#34d399' }}>
+              <CheckCircle size={24} />
+              <div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 700 }}>Citizen Operating Guide: Reporting &amp; Tracking Issues</h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Step-by-step instructions for submitting grievances, checking live status, and scoring municipal response.</p>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+              <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)', marginBottom: '0.5rem' }}>
+                  1. Real-Time GPS Detection
+                </div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  Click <strong>Report Civic Issue</strong> in the header. Click <strong>Detect Live GPS Location</strong> to automatically capture your real-time latitude/longitude and auto-populate your verified street address.
+                </p>
+              </div>
+
+              <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)', marginBottom: '0.5rem' }}>
+                  2. Attach Photo Evidence
+                </div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  Upload clear photographic proof of the issue (pothole, water pipeline leak, broken streetlight). Multimodal AI verifies the severity and assigns priority.
+                </p>
+              </div>
+
+              <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)', marginBottom: '0.5rem' }}>
+                  3. Track Progress across 3 Views
+                </div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  Use the <strong>Table</strong>, <strong>City Map</strong>, or <strong>Proofs Gallery</strong> to track lifecycle transitions: <code>SUBMITTED</code> &rarr; <code>UNDER_REVIEW</code> &rarr; <code>ASSIGNED</code> &rarr; <code>IN_PROGRESS</code> &rarr; <code>RESOLVED</code>.
+                </p>
+              </div>
+
+              <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)', marginBottom: '0.5rem' }}>
+                  4. Inspect Proof &amp; Submit Star Rating
+                </div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  When the municipal team completes repairs, view their on-site photographic proof in the dossier and submit a 1 to 5 star rating with feedback.
+                </p>
+              </div>
+
+              <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)', marginBottom: '0.5rem' }}>
+                  5. Privacy &amp; Profile Control
+                </div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  You can permanently delete your citizen profile and all submitted data at any time by clicking the <strong>Delete My Account</strong> button in the top right.
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </div>

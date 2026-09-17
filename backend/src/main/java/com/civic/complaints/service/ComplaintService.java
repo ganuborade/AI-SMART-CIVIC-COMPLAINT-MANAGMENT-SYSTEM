@@ -30,6 +30,7 @@ public class ComplaintService {
     private final AIService aiService;
     private final FileStorageService fileStorageService;
     private final NotificationService notificationService;
+    private final NotificationRepository notificationRepository;
 
     @Transactional
     public ComplaintResponse createComplaint(ComplaintRequest request, User citizen, MultipartFile image) {
@@ -276,4 +277,23 @@ public class ComplaintService {
                 .feedback(feedbackDto)
                 .build();
     }
+
+    @Transactional
+    public void deleteComplaint(Long id, User user) {
+        if (user == null || user.getRole() != Role.ADMIN) {
+            throw new SecurityException("Unauthorized: Only Municipal Administrators are permitted to delete complaints.");
+        }
+        Complaint complaint = complaintRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Complaint not found with id: " + id));
+
+        try {
+            notificationRepository.deleteByComplaintId(id);
+        } catch (Exception e) {
+            log.warn("Could not delete notifications for complaint #{}: {}", id, e.getMessage());
+        }
+
+        complaintRepository.delete(complaint);
+        log.info("Complaint #{} successfully deleted by Administrator '{}'", id, user.getEmail());
+    }
 }
+

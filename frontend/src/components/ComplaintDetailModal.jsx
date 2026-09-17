@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { addFeedbackApi } from '../api';
+import { addFeedbackApi, deleteComplaintApi } from '../api';
+import { useAuth } from '../context/AuthContext';
 import CityMap from './CityMap';
-import { X, Sparkles, MapPin, Calendar, User, Clock, Star, CheckCircle, AlertTriangle, Image as ImageIcon } from 'lucide-react';
+import { X, Sparkles, MapPin, Calendar, User, Clock, Star, CheckCircle, AlertTriangle, Image as ImageIcon, Trash2 } from 'lucide-react';
 
 export default function ComplaintDetailModal({ complaint, isOpen, onClose, onUpdated, currentUserId }) {
+  const { user } = useAuth();
   const [rating, setRating] = useState(5);
   const [feedbackComment, setFeedbackComment] = useState('');
   const [feedbackLoading, setFeedbackLoading] = useState(false);
@@ -25,6 +27,19 @@ export default function ComplaintDetailModal({ complaint, isOpen, onClose, onUpd
       alert('Failed to submit feedback: ' + (err.response?.data?.message || err.message));
     } finally {
       setFeedbackLoading(false);
+    }
+  };
+
+  const handleDeleteComplaint = async () => {
+    if (window.confirm(`Are you sure you want to permanently delete Complaint #${complaint.id}? This will remove all associated images, status history, and feedback. This action cannot be undone.`)) {
+      try {
+        await deleteComplaintApi(complaint.id);
+        alert(`Complaint #${complaint.id} deleted successfully.`);
+        if (onClose) onClose();
+        if (onUpdated) onUpdated({ id: complaint.id, deleted: true });
+      } catch (err) {
+        alert('Failed to delete complaint: ' + (err.response?.data?.message || err.message));
+      }
     }
   };
 
@@ -209,7 +224,20 @@ export default function ComplaintDetailModal({ complaint, isOpen, onClose, onUpd
           )}
         </div>
 
-        <div className="modal-footer">
+        <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            {user?.role === 'ADMIN' && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleDeleteComplaint}
+                style={{ color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.35)', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Trash2 size={16} />
+                Delete Complaint (Admin Only)
+              </button>
+            )}
+          </div>
           <button className="btn btn-secondary" onClick={onClose}>
             Close
           </button>

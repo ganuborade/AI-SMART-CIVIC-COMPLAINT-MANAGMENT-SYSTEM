@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { getEmployeeComplaintsApi, startWorkApi, resolveComplaintMultipartApi } from '../api';
+import { getEmployeeComplaintsApi, startWorkApi, resolveComplaintMultipartApi, deleteProfileApi } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
-import { HardHat, Play, CheckCircle2, UploadCloud, MapPin, Sparkles, X, Eye, Search, Filter, Clock, AlertTriangle, FileText, CheckCheck, BarChart3, Image } from 'lucide-react';
+import { HardHat, Play, CheckCircle2, UploadCloud, MapPin, Sparkles, X, Eye, Search, Filter, Clock, AlertTriangle, FileText, CheckCheck, BarChart3, Image, BookOpen, Trash2, CheckCircle } from 'lucide-react';
 
 export default function EmployeeDashboard({ onSelectComplaint }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { t } = useUI();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [priorityFilter, setPriorityFilter] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('assigned'); // 'assigned' | 'completed' | 'stats'
+  const [activeTab, setActiveTab] = useState('assigned'); // 'assigned' | 'completed' | 'stats' | 'manual'
 
   const [resolveTask, setResolveTask] = useState(null);
   const [resolveNotes, setResolveNotes] = useState('');
@@ -33,6 +33,18 @@ export default function EmployeeDashboard({ onSelectComplaint }) {
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (window.confirm(t('deleteAccountConfirm') || 'Are you sure you want to permanently delete your staff account? This will unassign your work orders and permanently remove your employee profile.')) {
+      try {
+        await deleteProfileApi();
+        alert('Your officer account has been permanently deleted.');
+        logout();
+      } catch (err) {
+        alert('Failed to delete account: ' + (err.response?.data?.message || err.message));
+      }
     }
   };
 
@@ -101,7 +113,7 @@ export default function EmployeeDashboard({ onSelectComplaint }) {
 
   return (
     <div>
-      <div className="page-header">
+      <div className="page-header" style={{ flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <div className="page-title">
             <h1>{user?.name || t('employee')} • Work Orders Portal</h1>
@@ -109,6 +121,26 @@ export default function EmployeeDashboard({ onSelectComplaint }) {
           <p className="page-subtitle">
             {user?.departmentName || 'Municipal Operations Department'} • Field Inspection, Crew Dispatch &amp; Verification Evidence
           </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <button
+            className="btn btn-secondary"
+            onClick={() => setActiveTab('manual')}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <BookOpen size={16} />
+            {t('employeeManual') || 'Field Officer Manual'}
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={handleDeleteAccount}
+            title={t('deleteAccount')}
+            style={{ color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.35)', padding: '0.65rem 0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Trash2 size={16} />
+            <span style={{ fontSize: '0.85rem' }}>{t('deleteAccount')}</span>
+          </button>
         </div>
       </div>
 
@@ -185,10 +217,17 @@ export default function EmployeeDashboard({ onSelectComplaint }) {
             >
               <BarChart3 size={14} /> Department Metrics
             </button>
+            <button
+              className={`tab-btn ${activeTab === 'manual' ? 'active' : ''}`}
+              onClick={() => setActiveTab('manual')}
+              style={{ fontSize: '0.85rem', padding: '0.4rem 0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <BookOpen size={14} /> {t('employeeManual') || 'Field Officer Manual'}
+            </button>
           </div>
 
           {/* Search & Filters */}
-          {activeTab !== 'stats' && (
+          {activeTab !== 'stats' && activeTab !== 'manual' && (
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
               <div style={{ position: 'relative' }}>
                 <input
@@ -221,6 +260,75 @@ export default function EmployeeDashboard({ onSelectComplaint }) {
         {loading ? (
           <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
             Loading field assignments...
+          </div>
+        ) : activeTab === 'manual' ? (
+          /* TAB 4: Field Officer Operational Manual */
+          <div style={{ padding: '1.75rem', maxWidth: '850px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.25rem' }}>
+              <div style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '10px', borderRadius: '10px' }}>
+                <BookOpen size={24} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.3rem', color: 'var(--text-primary)' }}>
+                  {t('employeeManual') || 'Municipal Field Officer & Crew Operational Manual'}
+                </h3>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Standard Operating Procedures (SOP) for Municipal Field Work, Evidence Capture &amp; SLA Compliance
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              <div className="card" style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem', color: 'var(--primary)', fontWeight: 600 }}>
+                  <HardHat size={18} />
+                  <span>Phase 1: Receiving Work Orders &amp; Crew Dispatch</span>
+                </div>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  Tickets auto-triaged by AI or assigned by ward administrators appear in your <strong>Active Work Orders</strong> queue. Inspect the initial citizen photo, GPS pin, address, and AI severity rating before heading to the field site.
+                </p>
+              </div>
+
+              <div className="card" style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem', color: 'var(--warning)', fontWeight: 600 }}>
+                  <Play size={18} />
+                  <span>Phase 2: Arriving on Site &amp; Starting Work</span>
+                </div>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  Once your crew arrives at the location, click the green <strong>"Start Work"</strong> button. The ticket status transitions to <code>IN_PROGRESS</code>, triggering an instant notification to the citizen that municipal crews are actively resolving their issue.
+                </p>
+              </div>
+
+              <div className="card" style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem', color: 'var(--success)', fontWeight: 600 }}>
+                  <CheckCircle2 size={18} />
+                  <span>Phase 3: Photographic Resolution Evidence</span>
+                </div>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  After physical repairs are finished, click <strong>"Resolve &amp; Submit Proof"</strong>. Upload a clear <strong>AFTER-repair photograph</strong> and enter field engineering notes. Tickets cannot be closed without photographic evidence.
+                </p>
+              </div>
+
+              <div className="card" style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem', color: '#a855f7', fontWeight: 600 }}>
+                  <BarChart3 size={18} />
+                  <span>Phase 4: Citizen Verification &amp; SLA Performance</span>
+                </div>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  Citizens receive a side-by-side comparison of the BEFORE and AFTER photographs and provide 1-5 star ratings. High turnaround efficiency contributes to department SLA ranking.
+                </p>
+              </div>
+
+              <div className="card" style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem', color: '#f87171', fontWeight: 600 }}>
+                  <Trash2 size={18} />
+                  <span>Account &amp; Permission Boundaries</span>
+                </div>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  Field officers can update ticket progress and resolve issues. Field officers <strong>cannot delete complaints</strong> (only system administrators possess complaint deletion privileges). If your posting concludes, use the <strong>"Delete My Account"</strong> button in the top header to remove your officer profile safely.
+                </p>
+              </div>
+            </div>
           </div>
         ) : activeTab === 'stats' ? (
           /* TAB 3: Department Performance Stats */

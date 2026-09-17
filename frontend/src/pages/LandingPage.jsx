@@ -67,8 +67,8 @@ export default function LandingPage({ onOpenAuth, onSelectComplaint }) {
       a: "The portal utilizes the device's native HTML5 Geolocation API with high-accuracy mode (±5 to 15 meters). To resolve coordinates into a human-readable street address without paid Google Maps billing, the system queries the free OpenStreetMap Nominatim reverse geocoding engine in real-time."
     },
     {
-      q: "What security passkeys are required for Admin and Municipal Officer registration?",
-      a: "To prevent unauthorized accounts from gaining administrative or field privileges, our dual-tier cryptographic passkey protection is enforced: Municipal Staff / Field Officers must enter passkey STAFF@2026 and pick their department; System Administrators must enter master passkey ADMIN@2026. Citizens can register freely without any passkey."
+      q: "What security authorization is required for Admin and Municipal Officer registration?",
+      a: "To prevent unauthorized accounts from gaining administrative or field privileges, strict cryptographic authorization passkeys are enforced. Municipal Staff and System Administrators must enter their official confidential authorization keys assigned by Municipal IT Administration. Citizens can register freely without any passkey."
     },
     {
       q: "How do field officers verify that a complaint is actually resolved?",
@@ -172,7 +172,7 @@ export default function LandingPage({ onOpenAuth, onSelectComplaint }) {
 
         {/* Access info */}
         <div style={{ marginTop: '1.5rem', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-          🔒 Passkey Protected Registration for <strong>Municipal Staff</strong> (<code>STAFF@2026</code>) and <strong>Administrators</strong> (<code>ADMIN@2026</code>)
+          🔒 Role-Based Authorization: Confidential Verification Required for Municipal Staff and Administrators
         </div>
       </section>
 
@@ -307,216 +307,7 @@ export default function LandingPage({ onOpenAuth, onSelectComplaint }) {
         </div>
       </section>
 
-      {/* SECTION: User Manual for All Types of Users */}
-      <section id="user-manual" style={{ marginBottom: '4rem' }}>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '0.35rem 0.85rem',
-            borderRadius: 'var(--radius-full)',
-            background: 'rgba(99, 102, 241, 0.1)',
-            border: '1px solid rgba(99, 102, 241, 0.25)',
-            color: 'var(--primary)',
-            fontSize: '0.8rem',
-            fontWeight: 600,
-            marginBottom: '0.8rem'
-          }}>
-            <BookOpen size={14} /> Comprehensive Operating Guide
-          </div>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 700, marginBottom: '0.4rem' }}>
-            User Manual for Citizens, Officers &amp; Administrators
-          </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '650px', margin: '0 auto' }}>
-            Step-by-step operating documentation tailored for each user role in the smart civic ecosystem.
-          </p>
-        </div>
 
-        {/* User Manual Tab Selector */}
-        <div className="tabs-nav" style={{ justifyContent: 'center', marginBottom: '1.5rem' }}>
-          <button
-            className={`tab-btn ${activeManualTab === 'citizen' ? 'active' : ''}`}
-            onClick={() => setActiveManualTab('citizen')}
-          >
-            👨‍👩‍👦 Citizen User Manual
-          </button>
-          <button
-            className={`tab-btn ${activeManualTab === 'employee' ? 'active' : ''}`}
-            onClick={() => setActiveManualTab('employee')}
-          >
-            👷 Municipal Field Officer Manual
-          </button>
-          <button
-            className={`tab-btn ${activeManualTab === 'admin' ? 'active' : ''}`}
-            onClick={() => setActiveManualTab('admin')}
-          >
-            🏛️ Municipal Administrator Manual
-          </button>
-        </div>
-
-        {/* Manual Content Panels */}
-        <div className="glass-panel" style={{ padding: '2rem' }}>
-          {activeManualTab === 'citizen' && (
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.5rem', color: '#34d399' }}>
-                <CheckCircle size={22} />
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Citizen Operating Guide: Reporting &amp; Tracking Issues</h3>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
-                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)', marginBottom: '0.4rem' }}>
-                    1. Instant Registration
-                  </div>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                    Click <strong>Register as Citizen</strong>. Enter your full name, email, phone number, and password. No security passkey is needed for public citizens.
-                  </p>
-                </div>
-
-                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)', marginBottom: '0.4rem' }}>
-                    2. Auto GPS &amp; Location Detection
-                  </div>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                    When reporting an issue, click <strong>Detect Live GPS Location</strong>. The browser captures your real-time latitude/longitude and fills your exact street address.
-                  </p>
-                </div>
-
-                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)', marginBottom: '0.4rem' }}>
-                    3. Upload Photo Evidence
-                  </div>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                    Attach clear photo proof of the civic issue (pothole, water leak, broken streetlight). AI validates the damage and estimates priority.
-                  </p>
-                </div>
-
-                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)', marginBottom: '0.4rem' }}>
-                    4. Real-Time Tracking &amp; Alerts
-                  </div>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                    Track your grievance through 3 views: <strong>My Complaints Table</strong>, <strong>Pune Incident Map</strong>, and <strong>Photo Gallery</strong> with live notification alerts.
-                  </p>
-                </div>
-
-                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)', marginBottom: '0.4rem' }}>
-                    5. Verify Proof &amp; Score Redressal
-                  </div>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                    Once the field team marks the issue <code>RESOLVED</code>, inspect their repair photograph and give a 1-5 star citizen satisfaction rating.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeManualTab === 'employee' && (
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.5rem', color: '#38bdf8' }}>
-                <Building size={22} />
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Municipal Field Officer Operating Guide: Work Order Resolution</h3>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
-                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#38bdf8', marginBottom: '0.4rem' }}>
-                    1. Staff Registration &amp; Passkey
-                  </div>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                    Select <strong>Municipal Officer (Employee)</strong>, choose your division (Roads, Water, Electric, Waste, Drainage), and input the security passkey: <code style={{ color: '#38bdf8' }}>STAFF@2026</code>.
-                  </p>
-                </div>
-
-                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#38bdf8', marginBottom: '0.4rem' }}>
-                    2. Department Work Order Queue
-                  </div>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                    Access your personalized dashboard with 3 tabs: <strong>Active Work Orders</strong>, <strong>Completed History Table</strong>, and <strong>Department Metrics</strong>.
-                  </p>
-                </div>
-
-                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#38bdf8', marginBottom: '0.4rem' }}>
-                    3. Transition to 'In Progress'
-                  </div>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                    When dispatching crews or arriving on site, click <strong>Start Work</strong>. The citizen is notified immediately that an officer has taken ownership.
-                  </p>
-                </div>
-
-                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#38bdf8', marginBottom: '0.4rem' }}>
-                    4. Resolution Proof Upload
-                  </div>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                    After on-site repairs are completed, click <strong>Resolve Issue</strong>, upload the camera proof of the repaired site, and enter resolution notes to close the ticket.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeManualTab === 'admin' && (
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.5rem', color: '#fbbf24' }}>
-                <Shield size={22} />
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Municipal Administrator Guide: City Command &amp; Triage Control</h3>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
-                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fbbf24', marginBottom: '0.4rem' }}>
-                    1. Admin Master Registration
-                  </div>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                    Register using master security passkey: <code style={{ color: '#fbbf24' }}>ADMIN@2026</code>. Admins possess full system privileges to dispatch, reassign, and override.
-                  </p>
-                </div>
-
-                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fbbf24', marginBottom: '0.4rem' }}>
-                    2. AI Triage &amp; Dispatch Table
-                  </div>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                    Review incoming complaints in the <strong>Triage &amp; Complaints Table</strong>. Inspect AI confidence recommendations, assign field engineers, or override priority.
-                  </p>
-                </div>
-
-                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fbbf24', marginBottom: '0.4rem' }}>
-                    3. Live City Command Incident Map
-                  </div>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                    Monitor spatial incident distribution across Pune. Filter by department markers to identify high-density grievance zones and flood clusters.
-                  </p>
-                </div>
-
-                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fbbf24', marginBottom: '0.4rem' }}>
-                    4. Users &amp; Workforce Directory
-                  </div>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                    Inspect the new <strong>Users &amp; Staff Directory Table</strong> to search, filter by role (Citizen, Employee, Admin), and audit passkey authorization status.
-                  </p>
-                </div>
-
-                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fbbf24', marginBottom: '0.4rem' }}>
-                    5. Add Departments &amp; CSV Export
-                  </div>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                    Create new municipal divisions with emergency helplines and export filtered municipal complaint reports as CSV spreadsheets for committee presentations.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
 
       {/* SECTION: Interactive FAQ Accordion */}
       <section id="faq-section" style={{ marginBottom: '4rem' }}>

@@ -87,9 +87,9 @@ export const TRANSLATIONS = {
     employeeAccount: 'Municipal Staff / Officer',
     adminAccount: 'System Administrator',
     staffSecretKey: 'Municipal Staff Security Passkey',
-    staffKeyPlaceholder: 'Enter staff authorization passkey (STAFF@2026)',
+    staffKeyPlaceholder: 'Enter official departmental staff authorization key',
     adminSecretKey: 'Administrator Security Passkey',
-    adminKeyPlaceholder: 'Enter admin authorization passkey (ADMIN@2026)',
+    adminKeyPlaceholder: 'Enter official municipal administrator security key',
     selectDept: 'Select Municipal Department',
     fullName: 'Full Name',
     emailAddress: 'Email Address',
@@ -97,6 +97,15 @@ export const TRANSLATIONS = {
     password: 'Password',
     confirmPassword: 'Confirm Password',
     
+    // Deletion & Manuals
+    deleteAccount: 'Delete My Account',
+    deleteAccountConfirm: 'Are you sure you want to permanently delete your account? All your profile data will be permanently deleted. This cannot be undone.',
+    deleteComplaint: 'Delete Complaint',
+    deleteComplaintConfirm: 'Are you sure you want to permanently delete this complaint from the municipal database? This action cannot be undone.',
+    citizenManual: 'Citizen User Manual',
+    officerManual: 'Field Officer Manual',
+    adminManual: 'Administrator Command Manual',
+
     // Real-Time GPS
     detectingGps: 'Detecting live satellite GPS...',
     gpsLocked: 'Real-Time GPS Locked',
@@ -191,9 +200,9 @@ export const TRANSLATIONS = {
     employeeAccount: 'नगरपालिका कर्मचारी / अधिकारी',
     adminAccount: 'सिस्टम प्रशासक (Admin)',
     staffSecretKey: 'कर्मचारी सुरक्षा पासकी (Passkey)',
-    staffKeyPlaceholder: 'स्टाफ सुरक्षा पासकी डालें (STAFF@2026)',
+    staffKeyPlaceholder: 'अधिकृत कर्मचारी सुरक्षा पासकी प्रविष्ट करें',
     adminSecretKey: 'प्रशासक सुरक्षा पासकी (Passkey)',
-    adminKeyPlaceholder: 'एडमिन सुरक्षा पासकी डालें (ADMIN@2026)',
+    adminKeyPlaceholder: 'अधिकृत प्रशासक सुरक्षा पासकी प्रविष्ट करें',
     selectDept: 'नगरपालिका विभाग चुनें',
     fullName: 'पूरा नाम',
     emailAddress: 'ईमेल पता',
@@ -201,6 +210,15 @@ export const TRANSLATIONS = {
     password: 'पासवर्ड',
     confirmPassword: 'पासवर्ड की पुष्टि करें',
     
+    // Deletion & Manuals
+    deleteAccount: 'मेरा खाता हटाएं',
+    deleteAccountConfirm: 'क्या आप सचमुच अपना खाता हमेशा के लिए हटाना चाहते हैं? आपकी सभी जानकारी नष्ट हो जाएगी।',
+    deleteComplaint: 'शिकायत हटाएं',
+    deleteComplaintConfirm: 'क्या आप सचमुच इस शिकायत को डेटाबेस से हमेशा के लिए हटाना चाहते हैं?',
+    citizenManual: 'नागरिक उपयोग निर्देशिका',
+    officerManual: 'फील्ड ऑफिसर निर्देशिका',
+    adminManual: 'प्रशासक कमांड निर्देशिका',
+
     // Real-Time GPS
     detectingGps: 'उपग्रह द्वारा लाइव जीपीएस खोजा जा रहा है...',
     gpsLocked: 'रीयल-टाइम जीपीएस लॉक',
@@ -295,9 +313,9 @@ export const TRANSLATIONS = {
     employeeAccount: 'महापालिका कर्मचारी / अधिकारी',
     adminAccount: 'सिस्टम प्रशासक (Admin)',
     staffSecretKey: 'कर्मचारी सुरक्षा पासकी (Passkey)',
-    staffKeyPlaceholder: 'कर्मचारी गुप्त पासकी टाका (STAFF@2026)',
+    staffKeyPlaceholder: 'अधिकृत कर्मचारी सुरक्षा पासकी टाका',
     adminSecretKey: 'प्रशासक सुरक्षा पासकी (Passkey)',
-    adminKeyPlaceholder: 'प्रशासक गुप्त पासकी टाका (ADMIN@2026)',
+    adminKeyPlaceholder: 'अधिकृत प्रशासक सुरक्षा पासकी टाका',
     selectDept: 'महापालिका विभाग निवडा',
     fullName: 'पूर्ण नाव',
     emailAddress: 'ईमेल पत्ता',
@@ -305,6 +323,15 @@ export const TRANSLATIONS = {
     password: 'पासवर्ड',
     confirmPassword: 'पासवर्ड पुन्हा टाका',
     
+    // Deletion & Manuals
+    deleteAccount: 'माझे खाते कायमचे हटवा',
+    deleteAccountConfirm: 'तुम्हाला नक्की तुमचे खाते कायमचे हटवायचे आहे का? तुमची सर्व माहिती नष्ट केली जाईल.',
+    deleteComplaint: 'तक्रार हटवा',
+    deleteComplaintConfirm: 'तुम्हाला नक्की ही तक्रार महापालिका डेटाबेसमधून कायमची हटवायची आहे का?',
+    citizenManual: 'नागरिक वापर मार्गदर्शिका',
+    officerManual: 'फील्ड ऑफिसर मार्गदर्शिका',
+    adminManual: 'प्रशासक कमांड मार्गदर्शिका',
+
     // Real-Time GPS
     detectingGps: 'उपग्रहाद्वारे थेट जीपीएस स्थान शोधत आहे...',
     gpsLocked: 'थेट जीपीएस स्थान निश्चित झाले',

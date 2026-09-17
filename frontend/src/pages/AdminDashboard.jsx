@@ -6,8 +6,12 @@ import {
   rejectComplaintApi,
   getDepartmentStatsApi,
   createDepartmentApi,
-  getAllUsersApi
+  getAllUsersApi,
+  deleteComplaintApi,
+  deleteUserApi,
+  deleteProfileApi
 } from '../api';
+import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 import CityMap from '../components/CityMap';
 import AssignModal from '../components/AssignModal';
@@ -32,17 +36,20 @@ import {
   Plus,
   X,
   Map,
-  Key
+  Key,
+  BookOpen,
+  Trash2
 } from 'lucide-react';
 
 export default function AdminDashboard({ onSelectComplaint }) {
+  const { user, logout } = useAuth();
   const { t } = useUI();
   const [complaints, setComplaints] = useState([]);
   const [stats, setStats] = useState(null);
   const [deptStats, setDeptStats] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('triage'); // 'triage' | 'departments' | 'users' | 'map'
+  const [activeTab, setActiveTab] = useState('triage'); // 'triage' | 'departments' | 'users' | 'map' | 'manual'
 
   const [selectedForAssign, setSelectedForAssign] = useState(null);
   const [filterCategory, setFilterCategory] = useState('ALL');
@@ -115,6 +122,43 @@ export default function AdminDashboard({ onSelectComplaint }) {
       alert('Complaint has been marked as REJECTED.');
     } catch (err) {
       alert('Failed to reject: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleDeleteComplaint = async (id, e) => {
+    if (e) e.stopPropagation();
+    if (window.confirm(`Are you sure you want to permanently delete Complaint #${id}? This will remove all associated images, status history, and feedback. This action is irreversible.`)) {
+      try {
+        await deleteComplaintApi(id);
+        setComplaints(complaints.filter(c => c.id !== id));
+        alert(`Complaint #${id} was permanently deleted.`);
+      } catch (err) {
+        alert('Failed to delete complaint: ' + (err.response?.data?.message || err.message));
+      }
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (window.confirm('Are you sure you want to permanently delete your administrator account? This will permanently remove your administrator credentials.')) {
+      try {
+        await deleteProfileApi();
+        alert('Your administrator account has been permanently deleted.');
+        logout();
+      } catch (err) {
+        alert('Failed to delete account: ' + (err.response?.data?.message || err.message));
+      }
+    }
+  };
+
+  const handleDeleteUser = async (u) => {
+    if (window.confirm(`Are you sure you want to permanently delete user #${u.id} (${u.name} - ${u.role})? This will permanently remove their user credentials and data.`)) {
+      try {
+        await deleteUserApi(u.id);
+        setUsers(users.filter(item => item.id !== u.id));
+        alert(`User #${u.id} (${u.name}) was permanently deleted.`);
+      } catch (err) {
+        alert('Failed to delete user: ' + (err.response?.data?.message || err.message));
+      }
     }
   };
 
@@ -214,13 +258,30 @@ export default function AdminDashboard({ onSelectComplaint }) {
             Live AI automated complaint triage, spatial incident mapping, department dispatch, and priority overrides.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.6rem' }}>
+        <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <button
+            className="btn btn-secondary"
+            onClick={() => setActiveTab('manual')}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <BookOpen size={16} />
+            {t('adminManual') || 'Administrator Manual'}
+          </button>
           <button
             className="btn btn-secondary"
             onClick={exportToCsv}
             title="Download CSV Incident Report"
           >
             <Download size={16} /> Export CSV Report
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={handleDeleteAccount}
+            title={t('deleteAccount')}
+            style={{ color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.35)', padding: '0.65rem 0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Trash2 size={16} />
+            <span style={{ fontSize: '0.85rem' }}>{t('deleteAccount')}</span>
           </button>
         </div>
       </div>
@@ -308,6 +369,12 @@ export default function AdminDashboard({ onSelectComplaint }) {
           onClick={() => setActiveTab('map')}
         >
           <Map size={16} /> Live City Command Map
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'manual' ? 'active' : ''}`}
+          onClick={() => setActiveTab('manual')}
+        >
+          <BookOpen size={16} /> {t('adminManual') || 'Administrator Manual'}
         </button>
       </div>
 
@@ -540,6 +607,15 @@ export default function AdminDashboard({ onSelectComplaint }) {
                                 <XCircle size={14} />
                               </button>
                             )}
+
+                            <button
+                              className="btn btn-secondary btn-sm"
+                              title="Delete Complaint (Admin Only)"
+                              onClick={(e) => handleDeleteComplaint(c.id, e)}
+                              style={{ color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                            >
+                              <Trash2 size={14} />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -747,12 +823,13 @@ export default function AdminDashboard({ onSelectComplaint }) {
                     <th style={{ padding: '0.75rem' }}>Department / Wing</th>
                     <th style={{ padding: '0.75rem' }}>Passkey / Auth Status</th>
                     <th style={{ padding: '0.75rem' }}>Joined Date</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan="6" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
                         No user accounts match your search.
                       </td>
                     </tr>
@@ -820,11 +897,91 @@ export default function AdminDashboard({ onSelectComplaint }) {
                         <td style={{ padding: '0.75rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
                           {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Active'}
                         </td>
+                        <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            title="Delete User Account"
+                            onClick={() => handleDeleteUser(u)}
+                            style={{ color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'manual' && (
+        <div className="glass-panel" style={{ padding: '1.75rem', maxWidth: '900px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.25rem' }}>
+            <div style={{ background: 'rgba(99, 102, 241, 0.15)', color: 'var(--primary)', padding: '10px', borderRadius: '10px' }}>
+              <BookOpen size={24} />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.3rem', color: 'var(--text-primary)' }}>
+                {t('adminManual') || 'Administrator Command Manual'}
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                Master Municipal Control: AI Triage, Department Routing, Passkey Governance, Ticket Deletion &amp; Data Audits
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            <div className="card" style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem', color: 'var(--primary)', fontWeight: 600 }}>
+                <Sparkles size={18} />
+                <span>1. AI-Powered Automated Triage &amp; Priority Overrides</span>
+              </div>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                Every incoming citizen report is automatically evaluated using AI computer vision and NLP. Priority levels (<code>LOW</code>, <code>MEDIUM</code>, <code>HIGH</code>, <code>CRITICAL</code>) are assigned based on public safety hazards. Admins can click the <strong>Edit icon</strong> on any ticket row to override the AI-suggested priority with an official justification.
+              </p>
+            </div>
+
+            <div className="card" style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem', color: 'var(--accent-blue, #38bdf8)', fontWeight: 600 }}>
+                <Building2 size={18} />
+                <span>2. Department Dispatch &amp; Officer Work Orders</span>
+              </div>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                Click the <strong>Assign icon</strong> to dispatch a ticket to a municipal department (e.g. Roads &amp; Bridges, Water Supply) and assign a specific field officer. The officer receives an instant push notification on their portal and the ticket status updates to <code>ASSIGNED</code>.
+              </p>
+            </div>
+
+            <div className="card" style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem', color: '#10b981', fontWeight: 600 }}>
+                <Download size={18} />
+                <span>3. Real-Time Spatial Mapping &amp; CSV Intelligence Reports</span>
+              </div>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                Switch to the <strong>Live City Command Map</strong> tab to view geospatial clustering of civic grievances across city wards. Click <strong>"Export CSV Report"</strong> at any time to generate an audit-ready municipal spreadsheet for council meetings and budget reviews.
+              </p>
+            </div>
+
+            <div className="card" style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.35)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem', color: '#f87171', fontWeight: 600 }}>
+                <Trash2 size={18} />
+                <span>4. Exclusive Authority: Complaint &amp; Incident Record Deletion</span>
+              </div>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                Only verified Administrators possess permission to delete complaints. Citizens and field employees are strictly prohibited from removing complaints. To delete duplicate, spam, or invalid tickets, click the red <strong>Trash icon</strong> on the triage table or inside the complaint dossier. All associated notifications and image links are cleanly cascaded.
+              </p>
+            </div>
+
+            <div className="card" style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem', color: '#fbbf24', fontWeight: 600 }}>
+                <Key size={18} />
+                <span>5. Passkey Governance &amp; Account Self-Deletion</span>
+              </div>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                Administrative and Officer registrations require secret passkeys defined in the system environment (never displayed in client interfaces). Administrators can also delete their own accounts via the <strong>"Delete Admin Account"</strong> button in the command header if transferring command.
+              </p>
             </div>
           </div>
         </div>
