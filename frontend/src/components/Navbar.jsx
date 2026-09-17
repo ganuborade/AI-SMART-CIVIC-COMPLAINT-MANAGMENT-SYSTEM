@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useUI } from '../context/UIContext';
 import { getNotificationsApi, markNotificationReadApi, getComplaintByIdApi } from '../api';
-import { Shield, Bell, User, LogOut, LogIn, Sparkles, UserPlus } from 'lucide-react';
+import { Shield, Bell, User, LogOut, LogIn, Sparkles, UserPlus, Sun, Moon, Globe } from 'lucide-react';
 
 export default function Navbar({ onOpenNewComplaint, onOpenAuth, onSelectComplaint }) {
   const { user, logout } = useAuth();
+  const { language, setLanguage, theme, toggleTheme, t } = useUI();
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -50,24 +52,58 @@ export default function Navbar({ onOpenNewComplaint, onOpenAuth, onSelectComplai
           <Shield size={22} />
         </div>
         <div>
-          <span>CivicAI</span>
-          <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: '4px' }}>Pulse</span>
+          <span>{t('appName')}</span>
+          <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: '4px' }}>{t('appPulse')}</span>
         </div>
         <span className="ai-pill">
           <Sparkles size={11} style={{ display: 'inline', marginRight: '3px' }} />
-          AI Powered
+          {t('aiPowered')}
         </span>
       </div>
 
       <div className="nav-actions">
-        {/* Authenticated State: Notifications Bell & User Profile */}
+        {/* Language Selector (English, Hindi, Marathi) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--bg-card)', padding: '0.25rem 0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+          <Globe size={14} color="var(--primary)" />
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            style={{
+              background: 'transparent',
+              color: 'var(--text-primary)',
+              border: 'none',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              outline: 'none'
+            }}
+            title="Switch Language / भाषा निवडा / भाषा बदलें"
+          >
+            <option value="en" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>English</option>
+            <option value="hi" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>हिंदी (Hindi)</option>
+            <option value="mr" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>मराठी (Marathi)</option>
+          </select>
+        </div>
+
+        {/* Theme Toggle (Dark / Light) */}
+        <button
+          className="btn btn-secondary btn-sm"
+          onClick={toggleTheme}
+          title={theme === 'dark' ? t('themeLight') : t('themeDark')}
+          style={{ padding: '0.45rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          {theme === 'dark' ? <Sun size={16} color="#fbbf24" /> : <Moon size={16} color="#6366f1" />}
+        </button>
+
+        {/* Authenticated State */}
         {user ? (
           <>
+            {/* Notification Bell */}
             <div style={{ position: 'relative' }}>
               <button
                 className="notification-btn"
                 onClick={() => setShowNotifications(!showNotifications)}
-                title="Activity Alerts"
+                title={t('activityAlerts')}
               >
                 <Bell size={18} />
                 {unreadCount > 0 && <span className="badge-count">{unreadCount}</span>}
@@ -79,7 +115,7 @@ export default function Navbar({ onOpenNewComplaint, onOpenAuth, onSelectComplai
                   right: 0,
                   top: '48px',
                   width: '340px',
-                  background: '#1e293b',
+                  background: 'var(--bg-secondary)',
                   border: '1px solid var(--border)',
                   borderRadius: 'var(--radius-md)',
                   boxShadow: 'var(--shadow-lg)',
@@ -89,12 +125,12 @@ export default function Navbar({ onOpenNewComplaint, onOpenAuth, onSelectComplai
                   overflowY: 'auto'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
-                    <strong style={{ fontSize: '0.9rem' }}>Activity Alerts</strong>
+                    <strong style={{ fontSize: '0.9rem' }}>{t('activityAlerts')}</strong>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{unreadCount} unread</span>
                   </div>
                   {notifications.length === 0 ? (
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', padding: '1rem 0' }}>
-                      No notifications yet.
+                      {t('noAlerts')}
                     </p>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -104,19 +140,19 @@ export default function Navbar({ onOpenNewComplaint, onOpenAuth, onSelectComplai
                           onClick={() => handleNotificationClick(n)}
                           style={{
                             padding: '0.6rem',
-                            background: n.isRead ? 'transparent' : 'rgba(99, 102, 241, 0.1)',
-                            border: '1px solid ' + (n.isRead ? 'rgba(255,255,255,0.05)' : 'rgba(99, 102, 241, 0.25)'),
+                            background: n.isRead ? 'transparent' : 'rgba(99, 102, 241, 0.12)',
+                            border: '1px solid ' + (n.isRead ? 'var(--border)' : 'rgba(99, 102, 241, 0.3)'),
                             borderRadius: 'var(--radius-sm)',
                             cursor: 'pointer',
                             fontSize: '0.8rem',
                             transition: 'background 0.2s ease'
                           }}
                         >
-                          <div style={{ fontWeight: 700, color: n.isRead ? 'var(--text-secondary)' : '#fff' }}>{n.title}</div>
+                          <div style={{ fontWeight: 700, color: n.isRead ? 'var(--text-secondary)' : 'var(--text-primary)' }}>{n.title}</div>
                           <div style={{ color: 'var(--text-secondary)', marginTop: '2px', fontSize: '0.75rem' }}>{n.message}</div>
                           {n.complaintId && (
                             <div style={{ fontSize: '0.7rem', color: 'var(--primary)', marginTop: '4px', fontWeight: 600 }}>
-                              Inspect Complaint #{n.complaintId} →
+                              {t('inspectComplaint')} #{n.complaintId} →
                             </div>
                           )}
                         </div>
@@ -157,14 +193,14 @@ export default function Navbar({ onOpenNewComplaint, onOpenAuth, onSelectComplai
                   color: user.role === 'ADMIN' ? '#f87171' : (user.role === 'EMPLOYEE' ? '#fbbf24' : '#34d399'),
                   marginLeft: '4px'
                 }}>
-                  {user.role}
+                  {t(user.role?.toLowerCase()) || user.role}
                 </span>
               </div>
 
               <button
                 className="btn btn-secondary btn-sm"
                 onClick={logout}
-                title="Log Out of Portal"
+                title={t('logout')}
                 style={{ padding: '0.45rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <LogOut size={15} />
@@ -172,7 +208,7 @@ export default function Navbar({ onOpenNewComplaint, onOpenAuth, onSelectComplai
             </div>
           </>
         ) : (
-          /* Unauthenticated State: Clean Professional Sign In / Register Buttons */
+          /* Unauthenticated State */
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <button
               className="btn btn-secondary btn-sm"
@@ -180,7 +216,7 @@ export default function Navbar({ onOpenNewComplaint, onOpenAuth, onSelectComplai
               style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               <LogIn size={15} />
-              Sign In
+              {t('signIn')}
             </button>
             <button
               className="btn btn-primary btn-sm"
@@ -188,7 +224,7 @@ export default function Navbar({ onOpenNewComplaint, onOpenAuth, onSelectComplai
               style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               <UserPlus size={15} />
-              Citizen Register
+              {t('register')}
             </button>
           </div>
         )}

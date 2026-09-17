@@ -15,12 +15,32 @@ import {
   Waves,
   Building,
   Star,
-  Users
+  Users,
+  HelpCircle,
+  ChevronDown,
+  ChevronUp,
+  BookOpen,
+  Info,
+  ExternalLink,
+  AlertTriangle,
+  Heart,
+  Database,
+  Cpu,
+  Key,
+  Smartphone,
+  CheckCircle,
+  FileText,
+  Lock,
+  Layers
 } from 'lucide-react';
 import { getComplaintsApi } from '../api';
 
 export default function LandingPage({ onOpenAuth, onSelectComplaint }) {
   const [publicComplaints, setPublicComplaints] = useState([]);
+  const [activeManualTab, setActiveManualTab] = useState('citizen'); // 'citizen' | 'employee' | 'admin'
+  const [expandedFaq, setExpandedFaq] = useState(0); // Index of open FAQ accordion
+
+  const feedbackUrl = "https://docs.google.com/forms/d/e/1FAIpQLSddEUsGIPqOsh6uXN01mszEO12jZRgRjV_f6b4b1P07AVM16w/viewform?usp=header";
 
   useEffect(() => {
     fetchPublicIssues();
@@ -36,6 +56,33 @@ export default function LandingPage({ onOpenAuth, onSelectComplaint }) {
   };
 
   const resolvedIssues = publicComplaints.filter(c => c.status === 'RESOLVED' || c.status === 'CLOSED');
+
+  const faqs = [
+    {
+      q: "How does the AI automated priority and department assignment work?",
+      a: "When a citizen submits a complaint (e.g., 'Severe water pipe leakage flooding main road near Shaniwar Wada'), the backend AI triage engine analyzes the description keywords, urgency indicators, and infrastructural context. It automatically maps the issue to the appropriate department (e.g. Water & Sewerage) and assigns an SLA priority (Critical, High, Medium, Low) within milliseconds."
+    },
+    {
+      q: "How does the real-time GPS location capture work without paid API keys?",
+      a: "The portal utilizes the device's native HTML5 Geolocation API with high-accuracy mode (±5 to 15 meters). To resolve coordinates into a human-readable street address without paid Google Maps billing, the system queries the free OpenStreetMap Nominatim reverse geocoding engine in real-time."
+    },
+    {
+      q: "What security passkeys are required for Admin and Municipal Officer registration?",
+      a: "To prevent unauthorized accounts from gaining administrative or field privileges, our dual-tier cryptographic passkey protection is enforced: Municipal Staff / Field Officers must enter passkey STAFF@2026 and pick their department; System Administrators must enter master passkey ADMIN@2026. Citizens can register freely without any passkey."
+    },
+    {
+      q: "How do field officers verify that a complaint is actually resolved?",
+      a: "Officers visit the physical site, perform repair work, and are required to upload high-resolution photographic evidence of the resolved site directly from their dashboard before marking the ticket as 'RESOLVED'. Citizens can inspect before-and-after photo evidence and submit 1 to 5 star satisfaction reviews."
+    },
+    {
+      q: "Which languages and themes are available on this platform?",
+      a: "CivicAI Pulse is fully trilingual, supporting English, हिंदी (Hindi), and मराठी (Marathi) with instantaneous switching via the top navigation bar. It also includes an ambient Theme Switcher offering Dark Mode for night field work and High-Contrast Light Mode for daytime municipal desk work."
+    },
+    {
+      q: "What should citizens do in case of an immediate life-threatening emergency?",
+      a: "This system is dedicated to municipal civil infrastructure grievances. For immediate life-threatening emergencies, armed crimes, accidents, or fires, citizens should immediately dial national emergency helplines: 112 (National Emergency), 100 (Police), 101 (Fire Brigade), or 108 (Ambulance)."
+    }
+  ];
 
   return (
     <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '1.5rem 1rem 4rem' }}>
@@ -70,7 +117,7 @@ export default function LandingPage({ onOpenAuth, onSelectComplaint }) {
           fontWeight: 800,
           lineHeight: 1.15,
           marginBottom: '1.2rem',
-          color: '#ffffff'
+          color: 'var(--text-primary)'
         }}>
           AI-Powered Smart Civic <br />
           <span style={{
@@ -89,7 +136,7 @@ export default function LandingPage({ onOpenAuth, onSelectComplaint }) {
           color: 'var(--text-secondary)',
           lineHeight: 1.6
         }}>
-          Empowering citizens to report urban infrastructural issues with photo evidence and GPS coordinates.
+          Empowering citizens to report urban infrastructural issues with photo evidence and live GPS coordinates.
           Multimodal AI automatically verifies damage, assigns priority, and dispatches work orders to municipal officers in real-time.
         </p>
 
@@ -111,241 +158,506 @@ export default function LandingPage({ onOpenAuth, onSelectComplaint }) {
             <LogIn size={18} />
             Sign In to Account
           </button>
+          <a
+            href={feedbackUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-secondary"
+            style={{ padding: '0.85rem 1.4rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px', color: '#f59e0b', textDecoration: 'none' }}
+          >
+            <Star size={18} />
+            Submit Feedback Form
+          </a>
         </div>
 
         {/* Access info */}
         <div style={{ marginTop: '1.5rem', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-          🔒 Secure Role-Based Access for <strong>Citizens</strong>, <strong>Department Officers</strong>, and <strong>Municipal Administrators</strong>
+          🔒 Passkey Protected Registration for <strong>Municipal Staff</strong> (<code>STAFF@2026</code>) and <strong>Administrators</strong> (<code>ADMIN@2026</code>)
         </div>
       </section>
 
-      {/* KPI Counters */}
-      <section className="kpi-grid" style={{ marginBottom: '3.5rem' }}>
-        <div className="kpi-card" style={{ textAlign: 'center' }}>
-          <div className="kpi-icon" style={{ margin: '0 auto 0.5rem', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--primary)' }}>
-            <Sparkles size={22} />
-          </div>
-          <div className="kpi-value" style={{ fontSize: '2rem' }}>96.5%</div>
-          <div className="kpi-subtext" style={{ fontSize: '0.85rem', fontWeight: 600 }}>AI Auto-Classification Accuracy</div>
-        </div>
-
-        <div className="kpi-card" style={{ textAlign: 'center' }}>
-          <div className="kpi-icon" style={{ margin: '0 auto 0.5rem', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}>
-            <Clock size={22} />
-          </div>
-          <div className="kpi-value" style={{ fontSize: '2rem' }}>&lt; 24 Hrs</div>
-          <div className="kpi-subtext" style={{ fontSize: '0.85rem', fontWeight: 600 }}>Emergency Turnaround Target</div>
-        </div>
-
-        <div className="kpi-card" style={{ textAlign: 'center' }}>
-          <div className="kpi-icon" style={{ margin: '0 auto 0.5rem', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}>
-            <Building size={22} />
-          </div>
-          <div className="kpi-value" style={{ fontSize: '2rem' }}>5 Wards</div>
-          <div className="kpi-subtext" style={{ fontSize: '0.85rem', fontWeight: 600 }}>Connected Municipal Departments</div>
-        </div>
-
-        <div className="kpi-card" style={{ textAlign: 'center' }}>
-          <div className="kpi-icon" style={{ margin: '0 auto 0.5rem', background: 'rgba(236, 72, 153, 0.15)', color: '#ec4899' }}>
-            <CheckCircle2 size={22} />
-          </div>
-          <div className="kpi-value" style={{ fontSize: '2rem' }}>100%</div>
-          <div className="kpi-subtext" style={{ fontSize: '0.85rem', fontWeight: 600 }}>Photographic Evidence Audit Trail</div>
-        </div>
-      </section>
-
-      {/* How the System Works */}
+      {/* Feature Highlights Grid */}
       <section style={{ marginBottom: '4rem' }}>
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <h2 style={{ fontSize: '1.8rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-            How the System Works
+            How CivicAI Pulse Transforms City Governance
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-            A transparent 4-step governance cycle connecting residents with city engineers.
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', maxWidth: '600px', margin: '0 auto' }}>
+            A unified, transparent platform connecting citizens directly with field engineers and municipal leaders.
           </p>
         </div>
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: '1.25rem'
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: '1.5rem'
         }}>
-          <div className="kpi-card" style={{ position: 'relative', overflow: 'hidden' }}>
-            <div style={{
-              position: 'absolute',
-              top: '12px',
-              right: '16px',
-              fontSize: '2.5rem',
-              fontWeight: 900,
-              color: 'rgba(255,255,255,0.04)',
-              lineHeight: 1
-            }}>01</div>
-            <div className="kpi-icon" style={{ background: 'rgba(99, 102, 241, 0.2)', color: 'var(--primary)', marginBottom: '1rem' }}>
-              <Camera size={20} />
+          <div className="glass-panel" style={{ padding: '1.5rem' }}>
+            <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+              <Camera size={22} />
             </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>1. Citizen Reporting</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              Citizens upload a photo of road potholes, water leakages, or broken streetlights with GPS pin-point coordinates.
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>Photo Evidence Verification</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              Upload before-and-after photo proof. Every complaint requires verifiable photo documentation to ensure accountability.
             </p>
           </div>
 
-          <div className="kpi-card" style={{ position: 'relative', overflow: 'hidden' }}>
-            <div style={{
-              position: 'absolute',
-              top: '12px',
-              right: '16px',
-              fontSize: '2.5rem',
-              fontWeight: 900,
-              color: 'rgba(255,255,255,0.04)',
-              lineHeight: 1
-            }}>02</div>
-            <div className="kpi-icon" style={{ background: 'rgba(168, 85, 247, 0.2)', color: '#c084fc', marginBottom: '1rem' }}>
-              <Sparkles size={20} />
+          <div className="glass-panel" style={{ padding: '1.5rem' }}>
+            <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+              <MapPin size={22} />
             </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>2. AI Analysis & Triage</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              Gemini Vision & Reasoning model evaluates severity, checks for duplicates, and assigns the correct priority and department.
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>Real-time GPS Spatial Telemetry</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              Pinpoint accuracy via HTML5 geolocation and free OpenStreetMap Nominatim reverse geocoding with interactive map rendering.
             </p>
           </div>
 
-          <div className="kpi-card" style={{ position: 'relative', overflow: 'hidden' }}>
-            <div style={{
-              position: 'absolute',
-              top: '12px',
-              right: '16px',
-              fontSize: '2.5rem',
-              fontWeight: 900,
-              color: 'rgba(255,255,255,0.04)',
-              lineHeight: 1
-            }}>03</div>
-            <div className="kpi-icon" style={{ background: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', marginBottom: '1rem' }}>
-              <Users size={20} />
+          <div className="glass-panel" style={{ padding: '1.5rem' }}>
+            <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+              <Sparkles size={22} />
             </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>3. Field Officer Dispatch</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              Municipal engineers receive the digitized work order, navigate to the site via GPS, and carry out physical repairs.
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>AI Triage &amp; Auto-Dispatch</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              Natural language damage assessment automatically predicts categories, assigns priorities, and notifies departments within seconds.
             </p>
           </div>
 
-          <div className="kpi-card" style={{ position: 'relative', overflow: 'hidden' }}>
-            <div style={{
-              position: 'absolute',
-              top: '12px',
-              right: '16px',
-              fontSize: '2.5rem',
-              fontWeight: 900,
-              color: 'rgba(255,255,255,0.04)',
-              lineHeight: 1
-            }}>04</div>
-            <div className="kpi-icon" style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', marginBottom: '1rem' }}>
-              <CheckCircle2 size={20} />
+          <div className="glass-panel" style={{ padding: '1.5rem' }}>
+            <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.15)', color: 'var(--warning)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+              <CheckCircle2 size={22} />
             </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>4. Proof & Feedback</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              Officer uploads "After" repair photo proof. The complaint is resolved, and the citizen provides star ratings and reviews.
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>Closed-Loop SLA Tracking</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              Field engineers provide timestamped completion photos. Citizens review resolutions and score departmental performance.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Municipal Departments Connected */}
-      <section style={{ marginBottom: '4rem' }}>
+      {/* SECTION: About This Project Architecture */}
+      <section id="about-section" style={{ marginBottom: '4rem' }}>
+        <div className="glass-panel" style={{ padding: '2.5rem 2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+              <Info size={22} />
+            </div>
+            <div>
+              <h2 style={{ fontSize: '1.6rem', fontWeight: 700 }}>About CivicAI Pulse Project</h2>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                System Architecture, Core Technologies, and Engineering Philosophy
+              </p>
+            </div>
+          </div>
+
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '2rem', fontSize: '0.95rem' }}>
+            CivicAI Pulse is an enterprise-grade civic grievance management ecosystem developed by <strong>TeamGanesh</strong>.
+            The system bridges the critical communication gap between urban citizens and municipal administrative bodies through
+            state-of-the-art web technologies, high-performance database pooling, and intelligent spatial telemetry.
+          </p>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '1.5rem'
+          }}>
+            <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem', color: 'var(--primary)' }}>
+                <Database size={18} />
+                <h4 style={{ fontSize: '1rem', fontWeight: 700 }}>MySQL 8 &amp; HikariCP Pooling</h4>
+              </div>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                Configured with HikariCP connection pooling (max pool size: 20, minimum idle: 5, statement caching of 250 statements)
+                and batched statement rewriting for sub-millisecond query execution.
+              </p>
+            </div>
+
+            <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem', color: '#38bdf8' }}>
+                <MapPin size={18} />
+                <h4 style={{ fontSize: '1rem', fontWeight: 700 }}>OpenStreetMap &amp; Free Nominatim</h4>
+              </div>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                Eliminates expensive proprietary map API billing. Captures hardware GPS coordinates (latitude, longitude, accuracy)
+                and resolves exact street addresses via OpenStreetMap API.
+              </p>
+            </div>
+
+            <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem', color: '#f59e0b' }}>
+                <Key size={18} />
+                <h4 style={{ fontSize: '1rem', fontWeight: 700 }}>Cryptographic Passkeys &amp; RBAC</h4>
+              </div>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                Strict role-based access control protecting Citizen, Municipal Officer, and Administrator domains with BCrypt password hashing,
+                JWT authentication, and protected registration passkeys.
+              </p>
+            </div>
+
+            <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem', color: '#10b981' }}>
+                <Smartphone size={18} />
+                <h4 style={{ fontSize: '1rem', fontWeight: 700 }}>Trilingual UI &amp; Dual Themes</h4>
+              </div>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                Built for true grassroots accessibility supporting English, Hindi (हिंदी), and Marathi (मराठी) alongside
+                instant Light and Dark mode toggling for varying daylight and field conditions.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION: User Manual for All Types of Users */}
+      <section id="user-manual" style={{ marginBottom: '4rem' }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 700, marginBottom: '0.4rem' }}>
-            Municipal Departments Integrated
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '0.35rem 0.85rem',
+            borderRadius: 'var(--radius-full)',
+            background: 'rgba(99, 102, 241, 0.1)',
+            border: '1px solid rgba(99, 102, 241, 0.25)',
+            color: 'var(--primary)',
+            fontSize: '0.8rem',
+            fontWeight: 600,
+            marginBottom: '0.8rem'
+          }}>
+            <BookOpen size={14} /> Comprehensive Operating Guide
+          </div>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 700, marginBottom: '0.4rem' }}>
+            User Manual for Citizens, Officers &amp; Administrators
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            Each department operates with designated specialized response teams.
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '650px', margin: '0 auto' }}>
+            Step-by-step operating documentation tailored for each user role in the smart civic ecosystem.
           </p>
         </div>
 
+        {/* User Manual Tab Selector */}
+        <div className="tabs-nav" style={{ justifyContent: 'center', marginBottom: '1.5rem' }}>
+          <button
+            className={`tab-btn ${activeManualTab === 'citizen' ? 'active' : ''}`}
+            onClick={() => setActiveManualTab('citizen')}
+          >
+            👨‍👩‍👦 Citizen User Manual
+          </button>
+          <button
+            className={`tab-btn ${activeManualTab === 'employee' ? 'active' : ''}`}
+            onClick={() => setActiveManualTab('employee')}
+          >
+            👷 Municipal Field Officer Manual
+          </button>
+          <button
+            className={`tab-btn ${activeManualTab === 'admin' ? 'active' : ''}`}
+            onClick={() => setActiveManualTab('admin')}
+          >
+            🏛️ Municipal Administrator Manual
+          </button>
+        </div>
+
+        {/* Manual Content Panels */}
+        <div className="glass-panel" style={{ padding: '2rem' }}>
+          {activeManualTab === 'citizen' && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.5rem', color: '#34d399' }}>
+                <CheckCircle size={22} />
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Citizen Operating Guide: Reporting &amp; Tracking Issues</h3>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)', marginBottom: '0.4rem' }}>
+                    1. Instant Registration
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    Click <strong>Register as Citizen</strong>. Enter your full name, email, phone number, and password. No security passkey is needed for public citizens.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)', marginBottom: '0.4rem' }}>
+                    2. Auto GPS &amp; Location Detection
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    When reporting an issue, click <strong>Detect Live GPS Location</strong>. The browser captures your real-time latitude/longitude and fills your exact street address.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)', marginBottom: '0.4rem' }}>
+                    3. Upload Photo Evidence
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    Attach clear photo proof of the civic issue (pothole, water leak, broken streetlight). AI validates the damage and estimates priority.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)', marginBottom: '0.4rem' }}>
+                    4. Real-Time Tracking &amp; Alerts
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    Track your grievance through 3 views: <strong>My Complaints Table</strong>, <strong>Pune Incident Map</strong>, and <strong>Photo Gallery</strong> with live notification alerts.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)', marginBottom: '0.4rem' }}>
+                    5. Verify Proof &amp; Score Redressal
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    Once the field team marks the issue <code>RESOLVED</code>, inspect their repair photograph and give a 1-5 star citizen satisfaction rating.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeManualTab === 'employee' && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.5rem', color: '#38bdf8' }}>
+                <Building size={22} />
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Municipal Field Officer Operating Guide: Work Order Resolution</h3>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#38bdf8', marginBottom: '0.4rem' }}>
+                    1. Staff Registration &amp; Passkey
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    Select <strong>Municipal Officer (Employee)</strong>, choose your division (Roads, Water, Electric, Waste, Drainage), and input the security passkey: <code style={{ color: '#38bdf8' }}>STAFF@2026</code>.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#38bdf8', marginBottom: '0.4rem' }}>
+                    2. Department Work Order Queue
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    Access your personalized dashboard with 3 tabs: <strong>Active Work Orders</strong>, <strong>Completed History Table</strong>, and <strong>Department Metrics</strong>.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#38bdf8', marginBottom: '0.4rem' }}>
+                    3. Transition to 'In Progress'
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    When dispatching crews or arriving on site, click <strong>Start Work</strong>. The citizen is notified immediately that an officer has taken ownership.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#38bdf8', marginBottom: '0.4rem' }}>
+                    4. Resolution Proof Upload
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    After on-site repairs are completed, click <strong>Resolve Issue</strong>, upload the camera proof of the repaired site, and enter resolution notes to close the ticket.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeManualTab === 'admin' && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.5rem', color: '#fbbf24' }}>
+                <Shield size={22} />
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Municipal Administrator Guide: City Command &amp; Triage Control</h3>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fbbf24', marginBottom: '0.4rem' }}>
+                    1. Admin Master Registration
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    Register using master security passkey: <code style={{ color: '#fbbf24' }}>ADMIN@2026</code>. Admins possess full system privileges to dispatch, reassign, and override.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fbbf24', marginBottom: '0.4rem' }}>
+                    2. AI Triage &amp; Dispatch Table
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    Review incoming complaints in the <strong>Triage &amp; Complaints Table</strong>. Inspect AI confidence recommendations, assign field engineers, or override priority.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fbbf24', marginBottom: '0.4rem' }}>
+                    3. Live City Command Incident Map
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    Monitor spatial incident distribution across Pune. Filter by department markers to identify high-density grievance zones and flood clusters.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fbbf24', marginBottom: '0.4rem' }}>
+                    4. Users &amp; Workforce Directory
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    Inspect the new <strong>Users &amp; Staff Directory Table</strong> to search, filter by role (Citizen, Employee, Admin), and audit passkey authorization status.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fbbf24', marginBottom: '0.4rem' }}>
+                    5. Add Departments &amp; CSV Export
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    Create new municipal divisions with emergency helplines and export filtered municipal complaint reports as CSV spreadsheets for committee presentations.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* SECTION: Interactive FAQ Accordion */}
+      <section id="faq-section" style={{ marginBottom: '4rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '0.35rem 0.85rem',
+            borderRadius: 'var(--radius-full)',
+            background: 'rgba(99, 102, 241, 0.1)',
+            border: '1px solid rgba(99, 102, 241, 0.25)',
+            color: 'var(--primary)',
+            fontSize: '0.8rem',
+            fontWeight: 600,
+            marginBottom: '0.8rem'
+          }}>
+            <HelpCircle size={14} /> Knowledge Base &amp; Redressal Details
+          </div>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 700, marginBottom: '0.4rem' }}>
+            Frequently Asked Questions (FAQ)
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '600px', margin: '0 auto' }}>
+            Quick answers about system functionality, SLA resolution timelines, and privacy policies.
+          </p>
+        </div>
+
+        <div style={{ maxWidth: '840px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {faqs.map((faq, idx) => {
+            const isOpen = expandedFaq === idx;
+            return (
+              <div
+                key={idx}
+                className="glass-panel"
+                style={{
+                  borderRadius: 'var(--radius-md)',
+                  border: isOpen ? '1px solid var(--primary)' : '1px solid var(--border)',
+                  overflow: 'hidden',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <button
+                  onClick={() => setExpandedFaq(isOpen ? -1 : idx)}
+                  style={{
+                    width: '100%',
+                    padding: '1.1rem 1.25rem',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    background: 'transparent',
+                    border: 'none',
+                    textAlign: 'left',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.95rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ color: 'var(--primary)', fontWeight: 700 }}>Q{idx + 1}.</span>
+                    {faq.q}
+                  </span>
+                  {isOpen ? <ChevronUp size={18} color="var(--primary)" /> : <ChevronDown size={18} color="var(--text-muted)" />}
+                </button>
+
+                {isOpen && (
+                  <div style={{
+                    padding: '0 1.25rem 1.2rem',
+                    fontSize: '0.85rem',
+                    color: 'var(--text-secondary)',
+                    lineHeight: 1.65,
+                    borderTop: '1px solid rgba(255, 255, 255, 0.04)',
+                    paddingTop: '0.9rem'
+                  }}>
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* SECTION: Citizen Feedback Google Form Action Card */}
+      <section id="feedback-section" style={{ marginBottom: '4rem' }}>
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-          gap: '1rem'
+          background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(168, 85, 247, 0.12) 100%)',
+          border: '1px solid rgba(99, 102, 241, 0.3)',
+          borderRadius: 'var(--radius-lg)',
+          padding: '2.5rem 2rem',
+          textAlign: 'center'
         }}>
-          <div style={{
-            background: 'var(--bg-secondary)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)',
-            padding: '1.25rem',
-            textAlign: 'center'
-          }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem' }}>
-              <MapPin size={22} />
-            </div>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.25rem' }}>Roads & Asphalt</h4>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Potholes, pavers, dividers & sidewalk restoration</p>
+          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+            <Star size={24} fill="#f59e0b" />
           </div>
+          <h3 style={{ fontSize: '1.6rem', fontWeight: 700, marginBottom: '0.6rem' }}>
+            Share Your Experience — Citizen Feedback Survey
+          </h3>
+          <p style={{ color: 'var(--text-secondary)', maxWidth: '620px', margin: '0 auto 1.8rem', fontSize: '0.92rem', lineHeight: 1.6 }}>
+            Help our municipal engineering team improve public service quality. Please take 2 minutes to complete our official survey.
+            Your feedback directly guides civic software enhancements and officer training.
+          </p>
 
-          <div style={{
-            background: 'var(--bg-secondary)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)',
-            padding: '1.25rem',
-            textAlign: 'center'
-          }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(14, 165, 233, 0.15)', color: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem' }}>
-              <Droplets size={22} />
-            </div>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.25rem' }}>Water & Sewerage</h4>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Pipeline bursts, low pressure & drinking lines</p>
-          </div>
-
-          <div style={{
-            background: 'var(--bg-secondary)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)',
-            padding: '1.25rem',
-            textAlign: 'center'
-          }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(234, 179, 8, 0.15)', color: '#facc15', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem' }}>
-              <Zap size={22} />
-            </div>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.25rem' }}>Street Lighting</h4>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>LED streetlamps, electrical transformers & wiring</p>
-          </div>
-
-          <div style={{
-            background: 'var(--bg-secondary)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)',
-            padding: '1.25rem',
-            textAlign: 'center'
-          }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(34, 197, 94, 0.15)', color: '#4ade80', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem' }}>
-              <Trash2 size={22} />
-            </div>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.25rem' }}>Sanitation & Waste</h4>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Garbage overflow, street sweeping & dump clearing</p>
-          </div>
-
-          <div style={{
-            background: 'var(--bg-secondary)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)',
-            padding: '1.25rem',
-            textAlign: 'center'
-          }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem' }}>
-              <Waves size={22} />
-            </div>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.25rem' }}>Stormwater Drains</h4>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Open manholes, drain desilting & flood relief</p>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <a
+              href={feedbackUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary"
+              style={{
+                padding: '0.85rem 1.8rem',
+                fontSize: '0.95rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                textDecoration: 'none'
+              }}
+            >
+              <ExternalLink size={18} /> Open Citizen Feedback Google Form
+            </a>
+            <button
+              className="btn btn-secondary"
+              onClick={() => onOpenAuth('register')}
+              style={{ padding: '0.85rem 1.6rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <UserPlus size={18} /> Register as Citizen
+            </button>
           </div>
         </div>
       </section>
 
       {/* Ready to Demo / Get Started CTA Card */}
       <section style={{
-        background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%)',
-        border: '1px solid rgba(99, 102, 241, 0.3)',
+        background: 'var(--bg-secondary)',
+        border: '1px solid var(--border)',
         borderRadius: 'var(--radius-lg)',
         padding: '2.5rem 2rem',
         textAlign: 'center'
       }}>
         <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.6rem' }}>
-          Access Your Civic Portal
+          Access Your Civic Portal Now
         </h3>
         <p style={{ color: 'var(--text-secondary)', maxWidth: '560px', margin: '0 auto 1.8rem', fontSize: '0.95rem' }}>
           Sign in using verified credentials to access the <strong>Citizen Dashboard</strong>, <strong>Field Officer Work Orders</strong>, or the <strong>Municipal Administrator Command Center</strong>.
@@ -366,7 +678,7 @@ export default function LandingPage({ onOpenAuth, onSelectComplaint }) {
             style={{ padding: '0.75rem 1.6rem', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             <UserPlus size={18} />
-            Register New Citizen
+            Register New Account
           </button>
         </div>
       </section>

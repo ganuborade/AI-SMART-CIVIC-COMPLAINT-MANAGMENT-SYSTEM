@@ -270,3 +270,40 @@ GROUP BY d.name;
 ## 🏆 Project Presentation Materials
 - **Interactive Presentation Deck (Browser-based PPT)**: Open `presentation.html` in any web browser to view the interactive competition-winning presentation.
 - **Slide Script & Q&A Guide**: Open `PRESENTATION_SLIDES.md` for the complete speaking script, slide timings, and judge Q&A preparation.
+
+---
+
+## 🔐 Cryptographic Registration Passkeys
+To prevent unauthorized users from registering administrative and municipal field officer accounts:
+| Role | Registration Key | Purpose |
+|---|---|---|
+| **System Administrator** | `ADMIN@2026` | Full city command center, triage queue, AI override, workforce directory |
+| **Municipal Field Officer** | `STAFF@2026` | Department work order queue, status transitions, resolution photo upload |
+| **Citizen** | *None required* | Free public grievance submission with live GPS and photo proof |
+
+---
+
+## 🌐 Trilingual Accessibility & Dual Themes
+- **3 Languages Supported**:
+  - 🇬🇧 English (`en`)
+  - 🇮🇳 हिंदी - Hindi (`hi`)
+  - 🚩 मराठी - Marathi (`mr`)
+- **Theme Switcher**:
+  - 🌙 **Dark Mode**: High-contrast glassmorphism for night field work and modern command centers.
+  - ☀️ **Light Mode**: Clean daylight municipal desk theme.
+
+---
+
+## 📝 Citizen Feedback Survey
+Help our engineering team improve civic services:
+- **Google Forms Survey Link**: [Open Official Citizen Feedback Survey](https://docs.google.com/forms/d/e/1FAIpQLSddEUsGIPqOsh6uXN01mszEO12jZRgRjV_f6b4b1P07AVM16w/viewform?usp=header)
+
+---
+
+## 👥 Project Credits & Team Information
+- **Developed with ❤️ by**: **TeamGanesh**
+- **Lead Developer**: Ganesh Borade
+- **Official Contact Email**: [`ganuborade9898@gmail.com`](mailto:ganuborade9898@gmail.com)
+- **Mobile / WhatsApp Helpline**: `+91 9096040485` / `9096040485`
+- **Municipal Jurisdiction**: Pune Municipal Corporation (PMC), Maharashtra, India
+

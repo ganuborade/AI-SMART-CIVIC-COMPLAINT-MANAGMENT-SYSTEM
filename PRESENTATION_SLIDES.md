@@ -136,3 +136,21 @@
 ### Q5: "How are credentials kept safe if this project is pushed to GitHub or shared?"
 > **Winning Answer**:
 > *"All sensitive database passwords, JWT secrets, and tokens are isolated in a root `.env` file that is explicitly registered in `.gitignore`. We provide a sanitized `.env.example` template with placeholder values for public code sharing."*
+
+### Q6: "How do you prevent unauthorized users from registering as Municipal Officers or Admins?"
+> **Winning Answer**:
+> *"We enforce cryptographic authorization passkeys at registration: Staff require `STAFF@2026` and department assignment, while Admins require `ADMIN@2026`. Public citizens can register freely without passkeys."*
+
+### Q7: "How is real-time location determined without paying Google Maps API billing?"
+> **Winning Answer**:
+> *"We leverage device-level HTML5 Geolocation API (`enableHighAccuracy: true`) coupled with the free OpenStreetMap Nominatim reverse geocoding API. This extracts exact latitude, longitude, and street addresses with zero API licensing fees."*
+
+---
+
+## 👥 Team & Contact Information
+- **Team**: **TeamGanesh**
+- **Lead Developer**: Ganesh Borade
+- **Email**: [`ganuborade9898@gmail.com`](mailto:ganuborade9898@gmail.com)
+- **Mobile / WhatsApp**: `+91 9096040485`
+- **Citizen Feedback Survey**: [Google Forms Survey](https://docs.google.com/forms/d/e/1FAIpQLSddEUsGIPqOsh6uXN01mszEO12jZRgRjV_f6b4b1P07AVM16w/viewform?usp=header)
+

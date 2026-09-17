@@ -24,4 +24,6 @@ public class RegisterRequest {
     private Role role = Role.CITIZEN;
 
     private Long departmentId; // For EMPLOYEE role
+
+    private String secretKey; // Required for ADMIN and EMPLOYEE registration
 }

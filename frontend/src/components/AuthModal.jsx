@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { X, Shield, User, Mail, Lock, Phone, LogIn, UserPlus, AlertCircle, Info } from 'lucide-react';
+import { useUI } from '../context/UIContext';
+import { getDepartmentsApi } from '../api';
+import { X, Shield, User, Mail, Lock, Phone, LogIn, UserPlus, AlertCircle, Info, Key, Building2 } from 'lucide-react';
 
 export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
   const { login, register } = useAuth();
+  const { t } = useUI();
   const [tab, setTab] = useState(initialTab);
 
   // Login form state
@@ -16,9 +19,32 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
   const [regPhone, setRegPhone] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
+  const [regRole, setRegRole] = useState('CITIZEN'); // 'CITIZEN' | 'EMPLOYEE' | 'ADMIN'
+  const [regDeptId, setRegDeptId] = useState('');
+  const [regSecretKey, setRegSecretKey] = useState('');
 
+  const [departments, setDepartments] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTab(initialTab);
+      fetchDepartments();
+    }
+  }, [isOpen, initialTab]);
+
+  const fetchDepartments = async () => {
+    try {
+      const res = await getDepartmentsApi();
+      setDepartments(res.data || []);
+      if (res.data?.length > 0 && !regDeptId) {
+        setRegDeptId(res.data[0].id);
+      }
+    } catch (e) {
+      console.warn('Could not fetch departments for registration', e);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -54,6 +80,24 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
       return;
     }
 
+    if (regRole === 'EMPLOYEE') {
+      if (!regDeptId) {
+        setError('Please select your municipal department.');
+        return;
+      }
+      if (!regSecretKey.trim()) {
+        setError('Municipal Staff Authorization Passkey is required (default: STAFF@2026).');
+        return;
+      }
+    }
+
+    if (regRole === 'ADMIN') {
+      if (!regSecretKey.trim()) {
+        setError('Administrator Security Passkey is required (default: ADMIN@2026).');
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const res = await register({
@@ -61,15 +105,18 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
         email: regEmail,
         password: regPassword,
         phone: regPhone,
-        role: 'CITIZEN'
+        role: regRole,
+        departmentId: regRole === 'EMPLOYEE' ? Number(regDeptId) : null,
+        secretKey: regSecretKey.trim()
       });
+
       if (res.success) {
         onClose();
       } else {
         setError(res.message || 'Registration failed');
       }
     } catch (err) {
-      setError(err.message || 'Registration failed. Please try again.');
+      setError(err.response?.data?.message || err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -77,7 +124,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
 
   return (
     <div className="modal-backdrop">
-      <div className="modal-content" style={{ maxWidth: '460px' }}>
+      <div className="modal-content" style={{ maxWidth: '480px', maxHeight: '92vh', overflowY: 'auto' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <div className="brand-icon" style={{ width: '36px', height: '36px' }}>
@@ -103,7 +150,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
             onClick={() => { setTab('login'); setError(''); }}
             style={{ flex: 1, padding: '0.75rem', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            <LogIn size={16} /> Sign In
+            <LogIn size={16} /> {t('signIn')}
           </button>
           <button
             type="button"
@@ -111,7 +158,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
             onClick={() => { setTab('register'); setError(''); }}
             style={{ flex: 1, padding: '0.75rem', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            <UserPlus size={16} /> Citizen Register
+            <UserPlus size={16} /> {t('register')}
           </button>
         </div>
 
@@ -137,7 +184,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
           <form onSubmit={handleLoginSubmit}>
             <div className="modal-body" style={{ padding: '1.25rem 1.5rem 0.5rem' }}>
               <div className="form-group">
-                <label className="form-label">Email Address</label>
+                <label className="form-label">{t('emailAddress')}</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type="email"
@@ -153,12 +200,12 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Password</label>
+                <label className="form-label">{t('password')}</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type="password"
                     className="form-input"
-                    placeholder="Enter your secure password"
+                    placeholder="Enter your password"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     required
@@ -175,7 +222,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
                 style={{ width: '100%', padding: '0.75rem', marginTop: '0.75rem', justifyContent: 'center' }}
               >
                 <LogIn size={16} />
-                {loading ? 'Verifying Credentials...' : 'Sign In'}
+                {loading ? 'Verifying Credentials...' : t('signIn')}
               </button>
 
               <div style={{
@@ -192,7 +239,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
               }}>
                 <Info size={16} color="var(--primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <div>
-                  <strong>Role-Based Access Control:</strong> Citizens, Department Officers, and Municipal Administrators must authenticate using their registered credentials.
+                  <strong>Role-Based Access:</strong> Citizens, Department Officers, and Municipal Administrators authenticate with their registered credentials.
                 </div>
               </div>
             </div>
@@ -206,8 +253,115 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
         ) : (
           <form onSubmit={handleRegisterSubmit}>
             <div className="modal-body" style={{ padding: '1.25rem 1.5rem 0.5rem' }}>
+              {/* Account Role Selector */}
               <div className="form-group">
-                <label className="form-label">Full Name *</label>
+                <label className="form-label">{t('accountType')} *</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setRegRole('CITIZEN'); setRegSecretKey(''); }}
+                    style={{
+                      padding: '0.5rem 0.25rem',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      border: '1px solid ' + (regRole === 'CITIZEN' ? 'var(--primary)' : 'var(--border)'),
+                      background: regRole === 'CITIZEN' ? 'rgba(99, 102, 241, 0.2)' : 'var(--bg-secondary)',
+                      color: regRole === 'CITIZEN' ? '#fff' : 'var(--text-secondary)',
+                      textAlign: 'center'
+                    }}
+                  >
+                    👤 {t('citizen')}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { setRegRole('EMPLOYEE'); }}
+                    style={{
+                      padding: '0.5rem 0.25rem',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      border: '1px solid ' + (regRole === 'EMPLOYEE' ? '#f59e0b' : 'var(--border)'),
+                      background: regRole === 'EMPLOYEE' ? 'rgba(245, 158, 11, 0.2)' : 'var(--bg-secondary)',
+                      color: regRole === 'EMPLOYEE' ? '#fbbf24' : 'var(--text-secondary)',
+                      textAlign: 'center'
+                    }}
+                  >
+                    👷 {t('employee')}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { setRegRole('ADMIN'); }}
+                    style={{
+                      padding: '0.5rem 0.25rem',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      border: '1px solid ' + (regRole === 'ADMIN' ? '#ef4444' : 'var(--border)'),
+                      background: regRole === 'ADMIN' ? 'rgba(239, 68, 68, 0.2)' : 'var(--bg-secondary)',
+                      color: regRole === 'ADMIN' ? '#f87171' : 'var(--text-secondary)',
+                      textAlign: 'center'
+                    }}
+                  >
+                    🛡️ {t('admin')}
+                  </button>
+                </div>
+              </div>
+
+              {/* Department Selector (For Employee) */}
+              {regRole === 'EMPLOYEE' && (
+                <div className="form-group" style={{ background: 'rgba(245, 158, 11, 0.08)', padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                  <label className="form-label" style={{ color: '#fbbf24' }}>
+                    <Building2 size={13} style={{ display: 'inline', marginRight: '4px' }} />
+                    {t('selectDept')} *
+                  </label>
+                  <select
+                    className="form-select"
+                    value={regDeptId}
+                    onChange={(e) => setRegDeptId(e.target.value)}
+                    required
+                  >
+                    {departments.map(d => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Security Passkey Input (For Employee or Admin) */}
+              {(regRole === 'EMPLOYEE' || regRole === 'ADMIN') && (
+                <div className="form-group" style={{
+                  background: regRole === 'ADMIN' ? 'rgba(239, 68, 68, 0.08)' : 'rgba(245, 158, 11, 0.08)',
+                  padding: '0.75rem',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid ' + (regRole === 'ADMIN' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(245, 158, 11, 0.3)')
+                }}>
+                  <label className="form-label" style={{ color: regRole === 'ADMIN' ? '#f87171' : '#fbbf24' }}>
+                    <Key size={13} style={{ display: 'inline', marginRight: '4px' }} />
+                    {regRole === 'ADMIN' ? t('adminSecretKey') : t('staffSecretKey')} *
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="password"
+                      className="form-input"
+                      placeholder={regRole === 'ADMIN' ? 'Default: ADMIN@2026' : 'Default: STAFF@2026'}
+                      value={regSecretKey}
+                      onChange={(e) => setRegSecretKey(e.target.value)}
+                      required
+                      style={{ paddingLeft: '2.4rem' }}
+                    />
+                    <Key size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                  </div>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                    Configured securely in backend .env to restrict unauthorized administrative signups.
+                  </span>
+                </div>
+              )}
+
+              <div className="form-group">
+                <label className="form-label">{t('fullName')} *</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type="text"
@@ -223,12 +377,12 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Email Address *</label>
+                <label className="form-label">{t('emailAddress')} *</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type="email"
                     className="form-input"
-                    placeholder="e.g. ramesh@example.com"
+                    placeholder="e.g. user@civic.gov"
                     value={regEmail}
                     onChange={(e) => setRegEmail(e.target.value)}
                     required
@@ -239,7 +393,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Mobile Phone Number *</label>
+                <label className="form-label">{t('phoneNumber')} *</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type="tel"
@@ -255,7 +409,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Create Password *</label>
+                <label className="form-label">{t('password')} *</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type="password"
@@ -271,7 +425,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Confirm Password *</label>
+                <label className="form-label">{t('confirmPassword')} *</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type="password"
@@ -293,7 +447,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
                 style={{ width: '100%', padding: '0.75rem', marginTop: '0.75rem', justifyContent: 'center' }}
               >
                 <UserPlus size={16} />
-                {loading ? 'Creating Citizen Account...' : 'Register as Citizen'}
+                {loading ? 'Creating Account...' : `Register as ${t(regRole.toLowerCase())}`}
               </button>
             </div>
 

@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { createComplaintMultipartApi, analyzeComplaintLiveApi, analyzeImageLiveApi } from '../api';
+import { useUI } from '../context/UIContext';
 import CityMap from './CityMap';
-import { X, Sparkles, MapPin, UploadCloud, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
+import { X, Sparkles, MapPin, UploadCloud, AlertCircle, CheckCircle2, ArrowRight, Compass, Clock, Navigation } from 'lucide-react';
 
 export default function NewComplaintModal({ isOpen, onClose, onCreated }) {
+  const { t } = useUI();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('FC Road, Shivajinagar, Pune');
   const [location, setLocation] = useState({ lat: 18.5204, lng: 73.8567 });
+  const [capturedTime, setCapturedTime] = useState(new Date().toLocaleTimeString());
+  const [isDetectingGps, setIsDetectingGps] = useState(false);
+  const [reverseGeocodingLoading, setReverseGeocodingLoading] = useState(false);
+
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -25,6 +31,8 @@ export default function NewComplaintModal({ isOpen, onClose, onCreated }) {
       setImagePreview(null);
       setAiAnalysis(null);
       setStep(1);
+    } else {
+      handleDetectLocation();
     }
   }, [isOpen]);
 
@@ -68,7 +76,7 @@ export default function NewComplaintModal({ isOpen, onClose, onCreated }) {
             ...prev,
             category: res.data.category || prev?.category,
             confidence: res.data.confidence || prev?.confidence,
-            imageTags: res.data.imageTags || 'Visual feature detected'
+            imageTags: res.data.imageTags || 'Visual damage marker detected'
           }));
         }
       } catch (err) {
@@ -79,21 +87,62 @@ export default function NewComplaintModal({ isOpen, onClose, onCreated }) {
     }
   };
 
+  // Real-time Free Reverse Geocoding with OpenStreetMap Nominatim API
+  const fetchAddressFromCoords = async (lat, lng) => {
+    try {
+      setReverseGeocodingLoading(true);
+      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+      const res = await fetch(url, {
+        headers: { 'Accept-Language': 'en' }
+      });
+      const data = await res.json();
+      if (data && data.display_name) {
+        // Build concise clean address
+        const parts = [];
+        if (data.address.road) parts.push(data.address.road);
+        if (data.address.suburb || data.address.neighbourhood) parts.push(data.address.suburb || data.address.neighbourhood);
+        if (data.address.city || data.address.town || data.address.county) parts.push(data.address.city || data.address.town || data.address.county);
+        if (data.address.postcode) parts.push(data.address.postcode);
+
+        const formatted = parts.length > 0 ? parts.join(', ') : data.display_name;
+        setAddress(formatted);
+      }
+    } catch (err) {
+      console.warn('Reverse geocoding error', err);
+    } finally {
+      setReverseGeocodingLoading(false);
+    }
+  };
+
+  // Real-time GPS Detection
   const handleDetectLocation = () => {
     if (navigator.geolocation) {
+      setIsDetectingGps(true);
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          setLocation({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude
-          });
-          setAddress(`GPS Coords: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`);
+          const lat = Number(pos.coords.latitude.toFixed(6));
+          const lng = Number(pos.coords.longitude.toFixed(6));
+          setLocation({ lat, lng });
+          setCapturedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+          setIsDetectingGps(false);
+          fetchAddressFromCoords(lat, lng);
         },
         () => {
-          alert('Could not access GPS. Using default city center.');
-        }
+          setIsDetectingGps(false);
+          // Fallback to current city location
+          fetchAddressFromCoords(location.lat, location.lng);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     }
+  };
+
+  const handleMapPinSelect = (lat, lng) => {
+    const fixedLat = Number(lat.toFixed(6));
+    const fixedLng = Number(lng.toFixed(6));
+    setLocation({ lat: fixedLat, lng: fixedLng });
+    setCapturedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    fetchAddressFromCoords(fixedLat, fixedLng);
   };
 
   const handleSubmit = async (e) => {
@@ -129,12 +178,12 @@ export default function NewComplaintModal({ isOpen, onClose, onCreated }) {
 
   return (
     <div className="modal-backdrop">
-      <div className="modal-content">
+      <div className="modal-content" style={{ maxWidth: '560px' }}>
         <div className="modal-header">
           <div>
-            <h2>Report Civic Problem</h2>
+            <h2>{t('reportProblem')}</h2>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              Step {step} of 3: {step === 1 ? 'Problem Description' : (step === 2 ? 'Upload Photo Proof' : 'Pin Exact Location')}
+              Step {step} of 3: {step === 1 ? 'Problem Description' : (step === 2 ? 'Upload Photo Proof' : 'Real-Time GPS Location')}
             </p>
           </div>
           <button onClick={onClose} style={{ color: 'var(--text-muted)' }}>
@@ -147,11 +196,11 @@ export default function NewComplaintModal({ isOpen, onClose, onCreated }) {
             {step === 1 && (
               <>
                 <div className="form-group">
-                  <label className="form-label">Problem Title *</label>
+                  <label className="form-label">{t('tableTitle')} *</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="e.g. Large pothole near school causing vehicle accidents"
+                    placeholder="e.g. Dangerous large pothole causing vehicle accidents near school"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     required
@@ -162,7 +211,7 @@ export default function NewComplaintModal({ isOpen, onClose, onCreated }) {
                   <label className="form-label">Detailed Description *</label>
                   <textarea
                     className="form-textarea"
-                    placeholder="Describe the issue, landmarks, how long it has been unresolved, and hazards to public safety..."
+                    placeholder="Describe the issue, landmarks, severity, how long it has been unresolved, and hazards to commuters..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={4}
@@ -175,7 +224,7 @@ export default function NewComplaintModal({ isOpen, onClose, onCreated }) {
                   <div className="ai-insight-box">
                     <div className="ai-insight-header">
                       <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Sparkles size={14} /> AI Real-time Analysis
+                        <Sparkles size={14} /> AI Real-time Triage
                       </span>
                       {aiLoading && <span style={{ fontSize: '0.7rem' }}>Thinking...</span>}
                     </div>
@@ -184,17 +233,17 @@ export default function NewComplaintModal({ isOpen, onClose, onCreated }) {
                       <>
                         <div className="ai-recommendation-chips">
                           <span className={`badge badge-${aiAnalysis.priority?.toLowerCase()}`}>
-                            {aiAnalysis.priority} Priority
+                            {t(aiAnalysis.priority) || aiAnalysis.priority}
                           </span>
                           <span className="badge badge-status">
-                            {aiAnalysis.category?.replace('_', ' ')}
+                            {t(aiAnalysis.category) || aiAnalysis.category?.replace('_', ' ')}
                           </span>
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                             Confidence: {Math.round((aiAnalysis.confidence || 0.88) * 100)}%
                           </span>
                         </div>
                         <div style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>
-                          Target Dept: <strong>{aiAnalysis.suggestedDepartment}</strong>
+                          Target Municipal Dept: <strong>{aiAnalysis.suggestedDepartment}</strong>
                         </div>
                         {aiAnalysis.duplicateOfId && (
                           <div style={{
@@ -228,10 +277,10 @@ export default function NewComplaintModal({ isOpen, onClose, onCreated }) {
                     />
                     <UploadCloud size={36} color="var(--primary)" style={{ margin: '0 auto 0.5rem' }} />
                     <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>
-                      {imageFile ? imageFile.name : 'Click or drop civic problem photo here'}
+                      {imageFile ? imageFile.name : 'Click or drop civic defect photo here'}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                      PNG, JPG up to 15MB. AI will analyze the picture to identify road or utility damage.
+                      PNG, JPG up to 15MB. AI will analyze the picture to verify damages.
                     </div>
                   </label>
                 </div>
@@ -266,33 +315,69 @@ export default function NewComplaintModal({ isOpen, onClose, onCreated }) {
             {step === 3 && (
               <>
                 <div className="form-group">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label className="form-label">Click on Map to Drop Location Pin</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <label className="form-label" style={{ marginBottom: 0 }}>
+                      <Navigation size={14} style={{ display: 'inline', marginRight: '4px' }} />
+                      {t('dropPinHint')}
+                    </label>
                     <button
                       type="button"
                       onClick={handleDetectLocation}
+                      disabled={isDetectingGps}
                       className="btn btn-secondary btn-sm"
-                      style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
+                      style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
                     >
-                      <MapPin size={12} /> Auto-Detect GPS
+                      <Compass size={13} color="var(--primary)" />
+                      {isDetectingGps ? t('detectingGps') : t('autoGpsBtn')}
                     </button>
+                  </div>
+
+                  {/* Real-time Telemetry Card */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '8px',
+                    padding: '0.6rem 0.8rem',
+                    background: 'var(--bg-secondary)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border)',
+                    marginBottom: '8px',
+                    fontSize: '0.75rem'
+                  }}>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)' }}>{t('liveCoords')}:</span>
+                      <div style={{ fontWeight: 700, color: 'var(--accent-blue, #38bdf8)' }}>
+                        {location.lat}° N, {location.lng}° E
+                      </div>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)' }}>{t('capturedAt')}:</span>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                        <Clock size={11} style={{ display: 'inline', marginRight: '3px' }} />
+                        {capturedTime}
+                      </div>
+                    </div>
                   </div>
 
                   <CityMap
                     height="240px"
                     isPicker={true}
                     pickerLocation={location}
-                    onSelectLocation={(lat, lng) => setLocation({ lat, lng })}
+                    onSelectLocation={handleMapPinSelect}
                   />
 
-                  <div style={{ marginTop: '0.5rem' }}>
-                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Street Landmark / Address</label>
+                  <div style={{ marginTop: '0.75rem' }}>
+                    <label className="form-label" style={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>{t('reverseGeocoded')} *</span>
+                      {reverseGeocodingLoading && <span style={{ color: 'var(--primary)' }}>Resolving address...</span>}
+                    </label>
                     <input
                       type="text"
                       className="form-input"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      placeholder="e.g. Near ABC School, Kothrud"
+                      placeholder="e.g. Near Modern High School, FC Road, Pune"
+                      required
                     />
                   </div>
                 </div>
@@ -332,7 +417,7 @@ export default function NewComplaintModal({ isOpen, onClose, onCreated }) {
                 className="btn btn-primary"
                 disabled={loading}
               >
-                {loading ? 'Submitting & Analyzing AI...' : 'Submit Complaint'}
+                {loading ? 'Submitting & Analyzing AI...' : 'Submit Real-Time Complaint'}
               </button>
             )}
           </div>

@@ -18,6 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.beans.factory.annotation.Value;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -27,6 +29,12 @@ public class AuthService {
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
+
+    @Value("${app.admin.secret-key:ADMIN@2026}")
+    private String adminSecretKey;
+
+    @Value("${app.employee.secret-key:STAFF@2026}")
+    private String employeeSecretKey;
 
     public AuthResponse login(AuthRequest request) {
         Authentication authentication = authenticationManager.authenticate(
@@ -48,10 +56,26 @@ public class AuthService {
             throw new IllegalArgumentException("Email is already registered: " + request.getEmail());
         }
 
+        Role requestedRole = request.getRole() != null ? request.getRole() : Role.CITIZEN;
+
+        // Security Passkey Validation
+        if (requestedRole == Role.ADMIN) {
+            if (request.getSecretKey() == null || !request.getSecretKey().trim().equals(adminSecretKey.trim())) {
+                throw new IllegalArgumentException("Invalid Administrator Security Passkey. Admin authorization denied.");
+            }
+        } else if (requestedRole == Role.EMPLOYEE) {
+            if (request.getSecretKey() == null || !request.getSecretKey().trim().equals(employeeSecretKey.trim())) {
+                throw new IllegalArgumentException("Invalid Municipal Staff Security Passkey. Employee authorization denied.");
+            }
+            if (request.getDepartmentId() == null) {
+                throw new IllegalArgumentException("Department selection is required for municipal employee registration.");
+            }
+        }
+
         Department department = null;
-        if (request.getRole() == Role.EMPLOYEE && request.getDepartmentId() != null) {
+        if (requestedRole == Role.EMPLOYEE && request.getDepartmentId() != null) {
             department = departmentRepository.findById(request.getDepartmentId())
-                    .orElse(null);
+                    .orElseThrow(() -> new IllegalArgumentException("Selected department does not exist"));
         }
 
         User user = User.builder()

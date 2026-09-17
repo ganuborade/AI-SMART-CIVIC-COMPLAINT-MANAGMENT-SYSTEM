@@ -70,6 +70,11 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getEmployees(departmentId));
     }
 
+    @GetMapping("/users")
+    public ResponseEntity<List<User>> getAllUsers() {
+        return ResponseEntity.ok(userRepository.findAll());
+    }
+
     private User getUser(UserPrincipal principal) {
         if (principal == null) {
             return userRepository.findByRole(com.civic.complaints.model.Role.ADMIN).stream()

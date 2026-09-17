@@ -358,3 +358,116 @@ LEFT JOIN assignments a ON d.id = a.department_id
 LEFT JOIN complaints c ON a.complaint_id = c.id
 GROUP BY d.name
 ORDER BY total_assigned DESC;
+
+-- DEMO QUERY 7: Real-Time GPS Spatial Incident Mapping (Geo-Coordinates & Hotspots)
+-- Queries latitude, longitude, address, category, and priority for map visualization
+SELECT 
+    c.id AS complaint_id,
+    c.title,
+    c.category,
+    c.priority,
+    c.status,
+    c.latitude,
+    c.longitude,
+    c.address,
+    u.name AS reported_by,
+    c.created_at
+FROM complaints c
+JOIN users u ON c.citizen_id = u.id
+WHERE c.latitude IS NOT NULL AND c.longitude IS NOT NULL
+ORDER BY c.priority = 'CRITICAL' DESC, c.created_at DESC;
+
+-- DEMO QUERY 8: Emergency & Critical Incident Escalation Queue
+-- Filters critical P1 complaints requiring immediate dispatch within 2-hour SLA
+SELECT 
+    c.id AS incident_id,
+    c.title,
+    c.category,
+    c.address,
+    c.status,
+    d.name AS responsible_department,
+    u.name AS citizen_name,
+    u.phone AS citizen_phone,
+    TIMESTAMPDIFF(HOUR, c.created_at, NOW()) AS hours_unresolved
+FROM complaints c
+JOIN users u ON c.citizen_id = u.id
+LEFT JOIN assignments a ON c.id = a.complaint_id
+LEFT JOIN departments d ON a.department_id = d.id
+WHERE c.priority = 'CRITICAL' AND c.status != 'RESOLVED'
+ORDER BY hours_unresolved DESC;
+
+-- DEMO QUERY 9: User & Staff Identity Directory (Role & Security Audit)
+-- Displays complete user roster with roles, department, and registration age
+SELECT 
+    u.id,
+    u.name,
+    u.email,
+    u.role,
+    COALESCE(d.name, 'Public / Citizen') AS assigned_department,
+    u.phone,
+    CASE 
+        WHEN u.role = 'ADMIN' THEN 'Passkey Verified (ADMIN@2026)'
+        WHEN u.role = 'EMPLOYEE' THEN 'Passkey Verified (STAFF@2026)'
+        ELSE 'Standard Citizen Account'
+    END AS security_passkey_status,
+    DATE(u.created_at) AS registration_date
+FROM users u
+LEFT JOIN departments d ON u.department_id = d.id
+ORDER BY 
+    CASE u.role 
+        WHEN 'ADMIN' THEN 1 
+        WHEN 'EMPLOYEE' THEN 2 
+        ELSE 3 
+    END, u.id ASC;
+
+-- DEMO QUERY 10: In-App Dashboard Notifications & Citizen Alerts
+-- Shows real-time in-app notification alerts generated for complaints
+SELECT 
+    n.id AS notification_id,
+    u.name AS recipient_user,
+    u.role AS recipient_role,
+    n.complaint_id,
+    n.title,
+    n.message,
+    CASE WHEN n.is_read = 1 THEN 'Read' ELSE 'UNREAD' END AS read_status,
+    n.created_at
+FROM notifications n
+JOIN users u ON n.user_id = u.id
+ORDER BY n.created_at DESC;
+
+-- DEMO QUERY 11: SLA Breach & Aging Incident Warning (> 24 Hours Unresolved)
+-- Identifies complaints that exceed target SLA response time
+SELECT 
+    c.id AS complaint_id,
+    c.title,
+    c.priority,
+    c.status,
+    d.name AS department_name,
+    emp.name AS assigned_officer,
+    c.created_at,
+    TIMESTAMPDIFF(HOUR, c.created_at, NOW()) AS age_in_hours,
+    CASE 
+        WHEN c.priority = 'CRITICAL' AND TIMESTAMPDIFF(HOUR, c.created_at, NOW()) > 12 THEN 'CRITICAL SLA BREACH'
+        WHEN c.priority = 'HIGH' AND TIMESTAMPDIFF(HOUR, c.created_at, NOW()) > 24 THEN 'HIGH SLA WARNING'
+        ELSE 'Within Normal Threshold'
+    END AS sla_risk_level
+FROM complaints c
+LEFT JOIN assignments a ON c.id = a.complaint_id
+LEFT JOIN departments d ON a.department_id = d.id
+LEFT JOIN users emp ON a.employee_id = emp.id
+WHERE c.status NOT IN ('RESOLVED', 'CLOSED', 'REJECTED')
+ORDER BY age_in_hours DESC;
+
+-- DEMO QUERY 12: System Overview & Platform Health KPI Counters
+-- Single-query comprehensive dashboard metrics for leadership presentations
+SELECT 
+    (SELECT COUNT(*) FROM complaints) AS total_complaints,
+    (SELECT COUNT(*) FROM complaints WHERE status = 'RESOLVED') AS resolved_complaints,
+    (SELECT COUNT(*) FROM complaints WHERE status IN ('ASSIGNED', 'IN_PROGRESS')) AS active_in_progress,
+    (SELECT COUNT(*) FROM complaints WHERE status = 'UNDER_REVIEW') AS pending_review,
+    (SELECT COUNT(*) FROM complaints WHERE priority = 'CRITICAL') AS critical_emergencies,
+    (SELECT COUNT(*) FROM users WHERE role = 'CITIZEN') AS registered_citizens,
+    (SELECT COUNT(*) FROM users WHERE role = 'EMPLOYEE') AS municipal_field_officers,
+    (SELECT COUNT(*) FROM users WHERE role = 'ADMIN') AS system_administrators,
+    (SELECT COUNT(*) FROM departments) AS municipal_departments;
+

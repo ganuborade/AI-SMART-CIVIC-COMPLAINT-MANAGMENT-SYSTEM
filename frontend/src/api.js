@@ -50,6 +50,7 @@ export const assignComplaintApi = (id, data) => api.put(`/admin/complaints/${id}
 export const overrideAIApi = (id, data) => api.put(`/admin/complaints/${id}/override-ai`, data);
 export const rejectComplaintApi = (id, reason) => api.put(`/admin/complaints/${id}/reject`, { reason });
 export const getEmployeesApi = (departmentId) => api.get('/admin/employees', { params: { departmentId } });
+export const getAllUsersApi = () => api.get('/admin/users');
 
 // Departments
 export const getDepartmentsApi = () => api.get('/departments');

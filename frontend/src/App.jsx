@@ -8,6 +8,7 @@ import EmployeeDashboard from './pages/EmployeeDashboard';
 import NewComplaintModal from './components/NewComplaintModal';
 import ComplaintDetailModal from './components/ComplaintDetailModal';
 import AuthModal from './components/AuthModal';
+import Footer from './components/Footer';
 
 function MainApp() {
   const { user, loading } = useAuth();
@@ -87,6 +88,8 @@ function MainApp() {
         )}
       </main>
 
+      <Footer />
+
       {/* New Complaint Modal */}
       <NewComplaintModal
         isOpen={isNewModalOpen}
@@ -113,10 +116,14 @@ function MainApp() {
   );
 }
 
+import { UIProvider } from './context/UIContext';
+
 export default function App() {
   return (
-    <AuthProvider>
-      <MainApp />
-    </AuthProvider>
+    <UIProvider>
+      <AuthProvider>
+        <MainApp />
+      </AuthProvider>
+    </UIProvider>
   );
 }

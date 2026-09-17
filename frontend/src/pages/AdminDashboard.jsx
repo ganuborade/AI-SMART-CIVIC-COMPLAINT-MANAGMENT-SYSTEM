@@ -5,8 +5,10 @@ import {
   overrideAIApi,
   rejectComplaintApi,
   getDepartmentStatsApi,
-  createDepartmentApi
+  createDepartmentApi,
+  getAllUsersApi
 } from '../api';
+import { useUI } from '../context/UIContext';
 import CityMap from '../components/CityMap';
 import AssignModal from '../components/AssignModal';
 import {
@@ -28,21 +30,27 @@ import {
   Phone,
   Mail,
   Plus,
-  X
+  X,
+  Map,
+  Key
 } from 'lucide-react';
 
 export default function AdminDashboard({ onSelectComplaint }) {
+  const { t } = useUI();
   const [complaints, setComplaints] = useState([]);
   const [stats, setStats] = useState(null);
   const [deptStats, setDeptStats] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('triage'); // 'triage' | 'departments'
+  const [activeTab, setActiveTab] = useState('triage'); // 'triage' | 'departments' | 'users' | 'map'
 
   const [selectedForAssign, setSelectedForAssign] = useState(null);
   const [filterCategory, setFilterCategory] = useState('ALL');
   const [filterPriority, setFilterPriority] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState('ALL');
 
   // Add Department Modal
   const [isAddDeptModalOpen, setIsAddDeptModalOpen] = useState(false);
@@ -61,14 +69,16 @@ export default function AdminDashboard({ onSelectComplaint }) {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [compRes, statRes, deptRes] = await Promise.all([
+      const [compRes, statRes, deptRes, userRes] = await Promise.all([
         getComplaintsApi(),
         getAdminStatsApi(),
-        getDepartmentStatsApi()
+        getDepartmentStatsApi(),
+        getAllUsersApi().catch(() => ({ data: [] }))
       ]);
-      setComplaints(compRes.data);
-      setStats(statRes.data);
-      setDeptStats(deptRes.data);
+      setComplaints(compRes.data || []);
+      setStats(statRes.data || null);
+      setDeptStats(deptRes.data || []);
+      setUsers(userRes.data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -178,6 +188,20 @@ export default function AdminDashboard({ onSelectComplaint }) {
     return true;
   });
 
+  const filteredUsers = users.filter(u => {
+    if (userRoleFilter !== 'ALL' && u.role !== userRoleFilter) return false;
+    if (userSearchQuery.trim()) {
+      const q = userSearchQuery.toLowerCase();
+      const nameMatch = u.name?.toLowerCase().includes(q);
+      const emailMatch = u.email?.toLowerCase().includes(q);
+      const phoneMatch = u.phone?.toLowerCase().includes(q);
+      const roleMatch = u.role?.toLowerCase().includes(q);
+      const deptMatch = u.department?.name?.toLowerCase().includes(q);
+      if (!nameMatch && !emailMatch && !phoneMatch && !roleMatch && !deptMatch) return false;
+    }
+    return true;
+  });
+
   return (
     <div>
       {/* Header */}
@@ -259,57 +283,70 @@ export default function AdminDashboard({ onSelectComplaint }) {
         </div>
       </div>
 
-      {/* Navigation Tab Bar */}
-      <div className="tabs-nav" style={{ marginBottom: '1.5rem' }}>
+      {/* Navigation Tab Bar with 4 Tables / Workspaces */}
+      <div className="tabs-nav" style={{ marginBottom: '1.5rem', flexWrap: 'wrap', gap: '6px' }}>
         <button
           className={`tab-btn ${activeTab === 'triage' ? 'active' : ''}`}
           onClick={() => setActiveTab('triage')}
         >
-          <Sparkles size={16} /> Incident Triage &amp; City Map
+          <Sparkles size={16} /> Triage &amp; Complaints Table ({complaints.length})
         </button>
         <button
           className={`tab-btn ${activeTab === 'departments' ? 'active' : ''}`}
           onClick={() => setActiveTab('departments')}
         >
-          <Building2 size={16} /> Municipal Departments &amp; Teams ({deptStats.length})
+          <Building2 size={16} /> Municipal Departments ({deptStats.length})
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
+          onClick={() => setActiveTab('users')}
+        >
+          <Users size={16} /> Users &amp; Staff Directory ({users.length})
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'map' ? 'active' : ''}`}
+          onClick={() => setActiveTab('map')}
+        >
+          <Map size={16} /> Live City Command Map
         </button>
       </div>
 
-      {activeTab === 'triage' ? (
-        <>
-          {/* City Map Section */}
-          <div className="glass-panel">
-            <div className="panel-header">
-              <div className="panel-title">
-                <MapPin size={20} color="var(--primary)" />
-                Interactive Municipal City Map
-              </div>
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', fontSize: '0.75rem' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444' }}></span> Road
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#0284c7' }}></span> Water
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b' }}></span> Streetlight
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981' }}></span> Garbage
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#8b5cf6' }}></span> Drainage
-                </span>
-              </div>
+      {activeTab === 'map' && (
+        <div className="glass-panel">
+          <div className="panel-header">
+            <div className="panel-title">
+              <MapPin size={20} color="var(--primary)" />
+              Live City Command Center Incident Map
             </div>
-
-            <CityMap
-              complaints={complaints}
-              onSelectComplaint={onSelectComplaint}
-              height="450px"
-            />
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', fontSize: '0.75rem' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444' }}></span> Road Damage
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#0284c7' }}></span> Water Leak
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b' }}></span> Streetlight
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981' }}></span> Garbage
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#8b5cf6' }}></span> Drainage
+              </span>
+            </div>
           </div>
 
+          <CityMap
+            complaints={complaints}
+            onSelectComplaint={onSelectComplaint}
+            height="500px"
+          />
+        </div>
+      )}
+
+      {activeTab === 'triage' && (
+        <>
           {/* Triage Data Table */}
           <div className="glass-panel">
             <div className="panel-header" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
@@ -513,7 +550,9 @@ export default function AdminDashboard({ onSelectComplaint }) {
             </div>
           </div>
         </>
-      ) : (
+      )}
+
+      {activeTab === 'departments' && (
         /* Municipal Departments & Teams Workspace */
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
@@ -604,6 +643,189 @@ export default function AdminDashboard({ onSelectComplaint }) {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'users' && (
+        /* Municipal Identity & Staff Directory Workspace */
+        <div>
+          {/* Summary Row */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div className="glass-panel" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                <Users size={22} />
+              </div>
+              <div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff' }}>{users.length}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Total Registered Accounts</div>
+              </div>
+            </div>
+
+            <div className="glass-panel" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--success)' }}>
+                <UserCheck size={22} />
+              </div>
+              <div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--success)' }}>
+                  {users.filter(u => u.role === 'CITIZEN').length}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Registered Citizens</div>
+              </div>
+            </div>
+
+            <div className="glass-panel" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'rgba(2, 132, 199, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#38bdf8' }}>
+                <Building2 size={22} />
+              </div>
+              <div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#38bdf8' }}>
+                  {users.filter(u => u.role === 'EMPLOYEE').length}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Field Officers &amp; Staff</div>
+              </div>
+            </div>
+
+            <div className="glass-panel" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--warning)' }}>
+                <Key size={22} />
+              </div>
+              <div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--warning)' }}>
+                  {users.filter(u => u.role === 'ADMIN').length}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>System Administrators</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Users Directory Table */}
+          <div className="glass-panel">
+            <div className="panel-header" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div className="panel-title">
+                <Users size={20} color="var(--primary)" />
+                Municipal Identity &amp; Staff Access Directory
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 400, marginLeft: '6px' }}>
+                  ({filteredUsers.length} matching)
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Search by name, email, phone, role..."
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
+                    style={{ fontSize: '0.8rem', padding: '0.35rem 0.6rem 0.35rem 2rem', width: '250px' }}
+                  />
+                  <Search size={14} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                </div>
+
+                <select
+                  className="form-select"
+                  style={{ fontSize: '0.8rem', padding: '0.35rem 0.6rem' }}
+                  value={userRoleFilter}
+                  onChange={(e) => setUserRoleFilter(e.target.value)}
+                >
+                  <option value="ALL">All Roles</option>
+                  <option value="CITIZEN">Citizens</option>
+                  <option value="EMPLOYEE">Employees / Field Engineers</option>
+                  <option value="ADMIN">System Administrators</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--text-muted)' }}>
+                    <th style={{ padding: '0.75rem' }}>User ID</th>
+                    <th style={{ padding: '0.75rem' }}>Full Name &amp; Contact</th>
+                    <th style={{ padding: '0.75rem' }}>Role</th>
+                    <th style={{ padding: '0.75rem' }}>Department / Wing</th>
+                    <th style={{ padding: '0.75rem' }}>Passkey / Auth Status</th>
+                    <th style={{ padding: '0.75rem' }}>Joined Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
+                        No user accounts match your search.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredUsers.map(u => (
+                      <tr key={u.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <td style={{ padding: '0.75rem', fontWeight: 700, color: 'var(--primary)' }}>
+                          #{u.id}
+                        </td>
+                        <td style={{ padding: '0.75rem' }}>
+                          <div style={{ fontWeight: 600, color: '#fff' }}>{u.name}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{u.email}</div>
+                          {u.phone && (
+                            <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>📞 {u.phone}</div>
+                          )}
+                        </td>
+                        <td style={{ padding: '0.75rem' }}>
+                          <span
+                            className="badge"
+                            style={{
+                              background:
+                                u.role === 'ADMIN'
+                                  ? 'rgba(245, 158, 11, 0.15)'
+                                  : u.role === 'EMPLOYEE'
+                                  ? 'rgba(2, 132, 199, 0.15)'
+                                  : 'rgba(16, 185, 129, 0.15)',
+                              color:
+                                u.role === 'ADMIN'
+                                  ? '#fbbf24'
+                                  : u.role === 'EMPLOYEE'
+                                  ? '#38bdf8'
+                                  : '#34d399',
+                              border: `1px solid ${
+                                u.role === 'ADMIN'
+                                  ? 'rgba(245, 158, 11, 0.3)'
+                                  : u.role === 'EMPLOYEE'
+                                  ? 'rgba(2, 132, 199, 0.3)'
+                                  : 'rgba(16, 185, 129, 0.3)'
+                              }`
+                            }}
+                          >
+                            {u.role}
+                          </span>
+                        </td>
+                        <td style={{ padding: '0.75rem' }}>
+                          {u.department ? (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#c084fc' }}>
+                              <Building2 size={13} /> {u.department.name}
+                            </span>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)' }}>Civic Public</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '0.75rem' }}>
+                          {u.role === 'ADMIN' || u.role === 'EMPLOYEE' ? (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#38bdf8' }}>
+                              <Key size={12} /> Passkey Protected
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                              Standard Citizen
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ padding: '0.75rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                          {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Active'}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
