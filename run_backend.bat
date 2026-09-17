@@ -3,8 +3,17 @@ setlocal
 title Civic Complaint System - Backend Server
 
 :: Ensure system commands, Java, and Node are on PATH
-set "PATH=C:\Windows\System32;C:\Windows;C:\Windows\System32\Wbem;C:\Program Files\Java\jdk-26\bin;%PATH%"
-set "JAVA_HOME=C:\Program Files\Java\jdk-26"
+if exist "C:\Program Files\Java\jdk-26" (
+    set "JAVA_HOME=C:\Program Files\Java\jdk-26"
+) else if exist "C:\Program Files\Java\latest" (
+    set "JAVA_HOME=C:\Program Files\Java\latest"
+)
+
+if defined JAVA_HOME (
+    set "PATH=C:\Windows\System32;C:\Windows;C:\Windows\System32\Wbem;%JAVA_HOME%\bin;%PATH%"
+) else (
+    set "PATH=C:\Windows\System32;C:\Windows;C:\Windows\System32\Wbem;%PATH%"
+)
 set "MAVEN_OPTS=-Xmx256m -XX:MaxMetaspaceSize=128m"
 
 cd /d "%~dp0backend"
