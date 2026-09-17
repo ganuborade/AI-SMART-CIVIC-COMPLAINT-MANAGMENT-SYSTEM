@@ -139,8 +139,8 @@ Located at: `d:\ai_smart\AI-SMART-CIVIC-COMPLAINT-MANAGMENT-SYSTEM\.env`
 ```env
 # High-Performance MySQL 8+ Database Configuration
 DB_URL=jdbc:mysql://localhost:3306/civic_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8&rewriteBatchedStatements=true&cachePrepStmts=true&prepStmtCacheSize=250&prepStmtCacheSqlLimit=2048&useServerPrepStmts=true
-DB_USERNAME=root
-DB_PASSWORD=Roor@123
+DB_USERNAME=
+DB_PASSWORD=
 
 # JWT Security Configuration
 JWT_SECRET=civic-smart-ai-complaint-system-jwt-secret-key-2026-secure-token
@@ -277,8 +277,8 @@ GROUP BY d.name;
 To prevent unauthorized users from registering administrative and municipal field officer accounts:
 | Role | Registration Key | Purpose |
 |---|---|---|
-| **System Administrator** | `ADMIN@2026` | Full city command center, triage queue, AI override, workforce directory |
-| **Municipal Field Officer** | `STAFF@2026` | Department work order queue, status transitions, resolution photo upload |
+| **System Administrator** | `ADMIN12@2026` | Full city command center, triage queue, AI override, workforce directory |
+| **Municipal Field Officer** | `STAFF13@2026` | Department work order queue, status transitions, resolution photo upload |
 | **Citizen** | *None required* | Free public grievance submission with live GPS and photo proof |
 
 ---
